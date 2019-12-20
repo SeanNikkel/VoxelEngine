@@ -26,14 +26,15 @@ public:
 	void AddQuad(Math::Direction orientation, glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f), float uvScale = 1.0f, glm::vec2 uvOffset = glm::vec2(0.0f, 0.0f), unsigned char ambients[] = nullptr);
 	//void SetVertices(Vertex vertices[], unsigned vertexCount);
 	void Clear();
-
-	static const Vertex quads[Math::DIRECTION_COUNT][Math::CORNER_COUNT];
-
-	static const unsigned quadIndices[];
+	unsigned VertexCount() const;
 
 	void Draw();
 
 	~Mesh();
+
+	static const Vertex quads[Math::DIRECTION_COUNT][Math::CORNER_COUNT];
+
+	static const unsigned quadIndices[];
 private:
 	GLuint vbo_;
 	GLuint vao_;

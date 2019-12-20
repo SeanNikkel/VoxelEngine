@@ -4,6 +4,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glm/gtx/norm.hpp>
 
 #include <unordered_set>
 
@@ -18,44 +19,97 @@ ChunkManager::~ChunkManager()
 		delete c.second;
 }
 
+// Adds completed chunk to buffer, generates surrounding chunks
+Chunk *ChunkManager::AddChunk(glm::ivec2 coord)
+{
+	Chunk *currentChunk = GetChunk(coord);
+	if (currentChunk == nullptr)
+	{
+		currentChunk = new Chunk(coord);
+		currentChunk->Generate(noise_);
+		chunks_[coord] = currentChunk;
+	}
+	else if (currentChunk->MeshBuilt())
+	{
+		return currentChunk;
+	}
+
+	// Generate surrounding chunks and add
+	for (unsigned i = 0; i < _countof(Math::surrounding); i++)
+	{
+		glm::ivec2 newCoord = coord + Math::surrounding[i];
+		if (GetChunk(newCoord) == nullptr)
+		{
+			Chunk *newChunk = new Chunk(newCoord);
+			newChunk->Generate(noise_);
+			chunks_[newCoord] = newChunk;
+		}
+	}
+
+	currentChunk->BuildMesh();
+	return currentChunk;
+}
+
+void ChunkManager::RemoveChunk(glm::ivec2 coord)
+{
+	RemoveChunk(chunks_.find(coord)->second);
+}
+
+void ChunkManager::RemoveChunk(Chunk *chunk)
+{
+}
+
+bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos)
+{
+	glm::vec3 pos = chunkPos + glm::vec3(World::chunkSize, 0.0f, World::chunkSize) / 2.f;
+	return glm::distance2(glm::vec2(pos.x, pos.z), glm::vec2(playerPos.x, playerPos.z)) <= World::renderDistance * World::renderDistance;
+}
+
 void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 {
 	glm::ivec2 coord = ToChunkPosition(glm::floor(playerPos));
 	unsigned loadedChunks = 0;
-	std::unordered_set<glm::ivec2> undrawn;
 
-	for (const auto &c : chunks_)
+	auto it = chunks_.begin();
+	while (it != chunks_.end())
 	{
-		undrawn.insert(c.first);
-	}
-
-	for (int x = coord.x - World::renderDistance; x <= (int)(coord.x + World::renderDistance); x++)
-	{
-		for (int z = coord.y - World::renderDistance; z <= (int)(coord.y + World::renderDistance); z++)
+		// Build meshes of all chunks and 
+		if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && ChunkInRange(playerPos, it->second->GetPos()))
 		{
-			glm::ivec2 chunkCoord = { x, z };
-			Chunk *currentChunk = GetChunk(chunkCoord);
+			loadedChunks++;
+			AddChunk(it->first);
+		}
 
-			if (currentChunk != nullptr)
-			{
-				undrawn.erase(chunkCoord);
-			}
-			else if (loadedChunks < World::renderSpeed)
-			{
-				Chunk *newChunk = new Chunk(chunkCoord.x, chunkCoord.y);
-				newChunk->Generate(noise_);
-				newChunk->BuildMesh(noise_);
-				chunks_[chunkCoord] = newChunk;
-				loadedChunks++;
-			}
+		// Unload if too far
+		if (it->second->MeshBuilt() && !ChunkInRange(playerPos, it->second->GetPos()))
+		{
+			//// Delete surrounding chunks that are out of range
+			//for (unsigned i = 0; i < _countof(Math::surrounding); i++)
+			//{
+			//	glm::ivec2 newCoord = coord + Math::surrounding[i];
+			//	ChunkContainer::iterator chunk = chunks_.find(newCoord);
+			//	if (chunk != chunks_.end() && !ChunkInRange(playerPos, chunk->second->GetPos()))
+			//	{
+			//		delete chunk->second;
+			//		chunks_.erase(chunk);
+			//	}
+			//}
+			// Delete this chunk
+			delete it->second;
+			auto toErase = it;
+			++it;
+			chunks_.erase(toErase);
+
+		}
+		else
+		{
+			++it;
 		}
 	}
 
-	for (const auto &u : undrawn)
+	if (chunks_.size() == 0)
 	{
-		auto undrawnChunk = chunks_.find(u);
-		delete undrawnChunk->second;
-		chunks_.erase(undrawnChunk);
+		AddChunk(coord);
 	}
 }
 
@@ -86,7 +140,7 @@ void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
 
 	chunk->SetBlock(pos, block);
 
-	chunk->BuildMesh(noise_);
+	chunk->BuildMesh();
 
 	for (int d = 0; d < Math::DIRECTION_COUNT; d++)
 	{
@@ -95,7 +149,7 @@ void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
 
 		Chunk *adjChunk = GetChunk(pos + static_cast<glm::ivec3>(Math::directionVectors[d]));
 		if (adjChunk != nullptr && adjChunk != chunk)
-			adjChunk->BuildMesh(noise_);
+			adjChunk->BuildMesh();
 	}
 }
 

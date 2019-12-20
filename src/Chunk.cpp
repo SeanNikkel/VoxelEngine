@@ -3,7 +3,7 @@
 #include "glm/gtc/noise.hpp"
 #include "glm/gtx/compatibility.hpp"
 
-Chunk::Chunk(int x, int y) : position_(x, y), mesh_(World::chunkArea * 2)
+Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 2)
 {
 }
 
@@ -39,7 +39,7 @@ void Chunk::Generate(TerrainGenerator &gen)
 
 }
 
-void Chunk::BuildMesh(TerrainGenerator &gen)
+void Chunk::BuildMesh()
 {
 	mesh_.Clear();
 
@@ -59,7 +59,7 @@ void Chunk::BuildMesh(TerrainGenerator &gen)
 					glm::vec3 normal = Math::directionVectors[d];
 					adjacent += normal;
 
-					if (adjacent.y >= 0 && !CheckForBlock(adjacent, gen))
+					if (adjacent.y >= 0 && !CheckForBlock(adjacent))
 					{
 						const int tilesheetSize = 8;
 
@@ -103,9 +103,9 @@ void Chunk::BuildMesh(TerrainGenerator &gen)
 								sides[current] += adjacent;
 								current++;
 							}
-							bool cornerExists = CheckForBlock(corner, gen);
-							bool side0Exists = CheckForBlock(sides[0], gen);
-							bool side1Exists = CheckForBlock(sides[1], gen);
+							bool cornerExists = CheckForBlock(corner);
+							bool side0Exists = CheckForBlock(sides[0]);
+							bool side1Exists = CheckForBlock(sides[1]);
 
 							if (side0Exists && side1Exists)
 								ambient[i] = 0;
@@ -122,6 +122,11 @@ void Chunk::BuildMesh(TerrainGenerator &gen)
 			}
 		}
 	}
+}
+
+bool Chunk::MeshBuilt() const
+{
+	return mesh_.VertexCount() != 0;
 }
 
 void Chunk::SetBlock(glm::ivec3 pos, const Block &block)
@@ -212,7 +217,7 @@ void Chunk::SetBlockLocal(glm::ivec3 pos, const Block &block)
 	blocks_[pos.x + pos.y * World::chunkArea + pos.z * World::chunkSize] = block;
 }
 
-bool Chunk::CheckForBlock(glm::ivec3 pos, TerrainGenerator &gen) const
+bool Chunk::CheckForBlock(glm::ivec3 pos) const
 {
 	if (!OutOfBounds(pos))
 		return GetBlockLocal(pos).type != Block::BLOCK_AIR;
@@ -224,9 +229,8 @@ bool Chunk::CheckForBlock(glm::ivec3 pos, TerrainGenerator &gen) const
 		glm::ivec3 world = LocalToWorld(pos);
 		Block block = ChunkManager::Instance().GetBlock(world);
 
-		if (block.type == Block::BLOCK_ERROR)
-			return gen.GetHeight({ world.x, world.z }) > world.y;
-		else
-			return block.type != Block::BLOCK_AIR;
+		assert(block.type != Block::BLOCK_ERROR);
+
+		return block.type != Block::BLOCK_AIR;
 	}
 }

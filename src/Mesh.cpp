@@ -124,6 +124,11 @@ void Mesh::Clear()
 	dirty_ = true;
 }
 
+unsigned Mesh::VertexCount() const
+{
+	return vertices_.size();
+}
+
 void Mesh::Draw()
 {
 	if (dirty_)

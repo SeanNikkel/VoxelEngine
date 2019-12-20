@@ -3,11 +3,11 @@
 namespace World
 {
 #ifdef _DEBUG
-	const unsigned renderDistance = 2; // chunk render radius
+	const float renderDistance = 32.0f; // block render radius
 	const unsigned renderSpeed = 1; // chunks generated per frame
 #else
-	const unsigned renderDistance = 32; // chunk render radius
-	const unsigned renderSpeed = 12; // chunks generated per frame
+	const float renderDistance = 256.0f; // block render radius
+	const unsigned renderSpeed = 9; // chunks generated per frame
 #endif
 
 	const float gravity = 9.8f;

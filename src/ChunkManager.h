@@ -40,13 +40,19 @@ public:
 	RaycastResult Raycast(glm::vec3 pos, glm::vec3 dir, float length = INFINITY);
 
 private:
+	typedef std::unordered_map<glm::ivec2, Chunk *> ChunkContainer;
+
 	Shader shader_;
 	Texture texture_;
-	std::unordered_map<glm::ivec2, Chunk *> chunks_;
+	ChunkContainer chunks_;
 	TerrainGenerator noise_;
 
 	ChunkManager();
 	~ChunkManager();
+	Chunk *AddChunk(glm::ivec2 coord);
+	void RemoveChunk(glm::ivec2 coord);
+	void RemoveChunk(Chunk *chunk);
+	bool ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos);
 	Chunk *GetChunk(glm::ivec3 pos);
 	Chunk *GetChunk(glm::ivec2 chunkCoord);
 	glm::ivec2 ToRelativePosition(glm::ivec3 pos) const;

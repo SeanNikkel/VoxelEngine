@@ -56,6 +56,17 @@ namespace Math
 		{ 0, 0, -1 },
 	};
 
+	const glm::ivec2 surrounding[] = {
+		glm::ivec2(-1.0f,  0.0f),
+		glm::ivec2(1.0f,  0.0f),
+		glm::ivec2(0.0f, -1.0f),
+		glm::ivec2(0.0f,  1.0f),
+		glm::ivec2(-1.0f,  1.0f),
+		glm::ivec2(1.0f,  1.0f),
+		glm::ivec2(1.0f, -1.0f),
+		glm::ivec2(-1.0f, -1.0f),
+	};
+
 	Direction AxisToDir(Axis axis, bool negative);
 	Direction VectorToDir(glm::vec3 vec);
 	glm::vec3 CornerToVec(Corner corner, Direction normal);

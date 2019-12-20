@@ -12,11 +12,12 @@
 class Chunk
 {
 public:
-	Chunk(int x, int y);
+	Chunk(glm::ivec2 pos);
 
 	void Generate(TerrainGenerator &gen);
 
-	void BuildMesh(TerrainGenerator &gen);
+	void BuildMesh();
+	bool MeshBuilt() const;
 
 	void SetBlock(glm::ivec3 pos, const Block &block);
 	const Block &GetBlock(glm::ivec3 pos) const;
@@ -41,7 +42,7 @@ private:
 	bool OutOfBounds(glm::ivec3 pos) const;
 	const Block &GetBlockLocal(glm::ivec3 pos) const;
 	void SetBlockLocal(glm::ivec3 pos, const Block &block);
-	bool CheckForBlock(glm::ivec3 pos, TerrainGenerator &gen) const;
+	bool CheckForBlock(glm::ivec3 pos) const;
 
 };
 
