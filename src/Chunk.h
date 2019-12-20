@@ -17,6 +17,7 @@ public:
 	void Generate(TerrainGenerator &gen);
 
 	void BuildMesh();
+	void ClearMesh();
 	bool MeshBuilt() const;
 
 	void SetBlock(glm::ivec3 pos, const Block &block);

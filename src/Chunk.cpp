@@ -124,6 +124,11 @@ void Chunk::BuildMesh()
 	}
 }
 
+void Chunk::ClearMesh()
+{
+	mesh_.Clear();
+}
+
 bool Chunk::MeshBuilt() const
 {
 	return mesh_.VertexCount() != 0;
@@ -141,11 +146,12 @@ const Block &Chunk::GetBlock(glm::ivec3 pos) const
 {
 	glm::ivec3 local = WorldToLocal(pos);
 
-	if (!OutOfBounds(local))
-		return GetBlockLocal(local);
-	// else
-	static Block error = { Block::BLOCK_ERROR };
-	return error;
+	if (OutOfBounds(local))
+	{
+		static Block error = { Block::BLOCK_ERROR };
+		return error;
+	}
+	return GetBlockLocal(local);
 }
 
 glm::ivec2 Chunk::GetCoord() const

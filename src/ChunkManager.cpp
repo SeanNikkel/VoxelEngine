@@ -7,6 +7,7 @@
 #include <glm/gtx/norm.hpp>
 
 #include <unordered_set>
+#include <iostream>
 
 ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.frag"), texture_("resources/tileset.png", true, true, GL_REPEAT, GL_NEAREST)
 {
@@ -69,8 +70,7 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 {
 	unsigned loadedChunks = 0;
 
-	auto it = chunks_.begin();
-	while (it != chunks_.end())
+	for (ChunkContainer::iterator it = chunks_.begin(); it != chunks_.end(); ++it)
 	{
 		// Build meshes of all chunks and 
 		if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && ChunkInRange(playerPos, it->second->GetPos()))
@@ -82,28 +82,34 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 		// Unload if too far
 		if (it->second->MeshBuilt() && !ChunkInRange(playerPos, it->second->GetPos()))
 		{
-			// Delete surrounding chunks that are out of range
+			// Delete surrounding chunks unconnected otherwise
 			for (unsigned i = 0; i < _countof(Math::surrounding); i++)
 			{
 				glm::ivec2 newCoord = it->first + Math::surrounding[i];
 				ChunkContainer::iterator chunk = chunks_.find(newCoord);
-				if (chunk != chunks_.end() && !ChunkInRange(playerPos, chunk->second->GetPos()))
+				if (chunk != chunks_.end() && !chunk->second->MeshBuilt())
 				{
-					delete chunk->second;
-					chunks_.erase(chunk);
+					bool hasBuiltNeighbor = false;
+					for (unsigned j = 0; j < _countof(Math::surrounding); j++)
+					{
+						Chunk *currentChunk = GetChunk(newCoord + Math::surrounding[j]);
+						if (currentChunk != nullptr && currentChunk != it->second && currentChunk->MeshBuilt())
+						{
+							hasBuiltNeighbor = true;
+							break;
+						}
+					}
+					if (!hasBuiltNeighbor)
+					{
+						delete chunk->second;
+						chunks_.erase(chunk);
+					}
 				}
 			}
 
-			// Delete this chunk
-			delete it->second;
-			auto toErase = it;
-			++it;
-			chunks_.erase(toErase);
-
-		}
-		else
-		{
-			++it;
+			// Only remove mesh of chunk
+			// TODO: add separate flag so mesh can stay until deletion
+			it->second->ClearMesh();
 		}
 	}
 
@@ -111,6 +117,25 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 	{
 		AddChunk(ToChunkPosition(glm::floor(playerPos)));
 	}
+
+	// Bad draw
+	//SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 0 });
+	//for (int y = -20; y <= 20; y++)
+	//{
+	//	for (int x = -20; x <= 20; x++)
+	//	{
+	//		Chunk *chunk = GetChunk({ x, y });
+	//		if (chunk == nullptr)
+	//			std::cout << " ";
+	//		else if (chunk->MeshBuilt())
+	//			std::cout << ".";
+	//		else
+	//			std::cout << "#";
+
+	//		std::cout << " ";
+	//	}
+	//	std::cout << std::endl;
+	//}
 }
 
 void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix)
