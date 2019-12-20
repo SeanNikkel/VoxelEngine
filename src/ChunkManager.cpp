@@ -67,7 +67,6 @@ bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos)
 
 void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 {
-	glm::ivec2 coord = ToChunkPosition(glm::floor(playerPos));
 	unsigned loadedChunks = 0;
 
 	auto it = chunks_.begin();
@@ -83,17 +82,18 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 		// Unload if too far
 		if (it->second->MeshBuilt() && !ChunkInRange(playerPos, it->second->GetPos()))
 		{
-			//// Delete surrounding chunks that are out of range
-			//for (unsigned i = 0; i < _countof(Math::surrounding); i++)
-			//{
-			//	glm::ivec2 newCoord = coord + Math::surrounding[i];
-			//	ChunkContainer::iterator chunk = chunks_.find(newCoord);
-			//	if (chunk != chunks_.end() && !ChunkInRange(playerPos, chunk->second->GetPos()))
-			//	{
-			//		delete chunk->second;
-			//		chunks_.erase(chunk);
-			//	}
-			//}
+			// Delete surrounding chunks that are out of range
+			for (unsigned i = 0; i < _countof(Math::surrounding); i++)
+			{
+				glm::ivec2 newCoord = it->first + Math::surrounding[i];
+				ChunkContainer::iterator chunk = chunks_.find(newCoord);
+				if (chunk != chunks_.end() && !ChunkInRange(playerPos, chunk->second->GetPos()))
+				{
+					delete chunk->second;
+					chunks_.erase(chunk);
+				}
+			}
+
 			// Delete this chunk
 			delete it->second;
 			auto toErase = it;
@@ -109,7 +109,7 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 
 	if (chunks_.size() == 0)
 	{
-		AddChunk(coord);
+		AddChunk(ToChunkPosition(glm::floor(playerPos)));
 	}
 }
 
