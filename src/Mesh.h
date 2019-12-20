@@ -19,15 +19,14 @@ class Mesh
 {
 public:
 	Mesh(unsigned reserve = 0);
-	//Mesh(Vertex vertices[], unsigned vertexCount);
 
-	// Add these back if needed, integrate with ebo
-	//void AddVertex(const Vertex &vertex);
 	void AddQuad(Math::Direction orientation, glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f), float uvScale = 1.0f, glm::vec2 uvOffset = glm::vec2(0.0f, 0.0f), unsigned char ambients[] = nullptr);
-	//void SetVertices(Vertex vertices[], unsigned vertexCount);
 	void Clear();
-	unsigned VertexCount() const;
 
+	unsigned IndexCount() const;
+	bool OnCPU() const;
+
+	void TransferToGPU();
 	void Draw();
 
 	~Mesh();
@@ -41,10 +40,10 @@ private:
 	GLuint ebo_;
 	std::vector<Vertex> vertices_;
 	std::vector<GLuint> indices_;
-	unsigned
+	unsigned indexCount_;
+	unsigned reserveAmount_;
 
-	bool dirty_ = false;
+	bool onCpu_ = false;
 
 	void SetupObjects();
-	void UpdateBuffers();
 };

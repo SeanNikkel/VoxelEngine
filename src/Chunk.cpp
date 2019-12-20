@@ -3,7 +3,7 @@
 #include "glm/gtc/noise.hpp"
 #include "glm/gtx/compatibility.hpp"
 
-Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 2)
+Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 4)
 {
 }
 
@@ -131,7 +131,7 @@ void Chunk::ClearMesh()
 
 bool Chunk::MeshBuilt() const
 {
-	return mesh_.VertexCount() != 0;
+	return mesh_.IndexCount() != 0;
 }
 
 void Chunk::SetBlock(glm::ivec3 pos, const Block &block)

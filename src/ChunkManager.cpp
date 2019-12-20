@@ -50,15 +50,6 @@ Chunk *ChunkManager::AddChunk(glm::ivec2 coord)
 	return currentChunk;
 }
 
-void ChunkManager::RemoveChunk(glm::ivec2 coord)
-{
-	RemoveChunk(chunks_.find(coord)->second);
-}
-
-void ChunkManager::RemoveChunk(Chunk *chunk)
-{
-}
-
 bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos)
 {
 	glm::vec3 pos = chunkPos + glm::vec3(World::chunkSize, 0.0f, World::chunkSize) / 2.f;

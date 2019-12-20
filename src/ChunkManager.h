@@ -50,8 +50,6 @@ private:
 	ChunkManager();
 	~ChunkManager();
 	Chunk *AddChunk(glm::ivec2 coord);
-	void RemoveChunk(glm::ivec2 coord);
-	void RemoveChunk(Chunk *chunk);
 	bool ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos);
 	Chunk *GetChunk(glm::ivec3 pos);
 	Chunk *GetChunk(glm::ivec2 chunkCoord);

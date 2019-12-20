@@ -55,10 +55,9 @@ const Vertex Mesh::quads[Math::DIRECTION_COUNT][Math::CORNER_COUNT] =
 
 const unsigned Mesh::quadIndices[] = { 0, 1, 2, 2, 1, 3 };
 
-Mesh::Mesh(unsigned reserve)
+Mesh::Mesh(unsigned reserve) : reserveAmount_(reserve)
 {
 	SetupObjects();
-	vertices_.reserve(reserve);
 }
 
 //Mesh::Mesh(Vertex vertices[], unsigned vertexCount)
@@ -75,8 +74,14 @@ Mesh::Mesh(unsigned reserve)
 
 void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale, glm::vec2 uvOffset, unsigned char ambients[])
 {
+	if (vertices_.capacity() == 0)
+	{
+		vertices_.reserve(reserveAmount_);
+		indices_.reserve(unsigned(reserveAmount_ * 1.5f));
+	}
+
 	vertices_.insert(vertices_.end(), &quads[orientation][0], &quads[orientation][Math::CORNER_COUNT]);
-	dirty_ = true;
+	onCpu_ = true;
 	
 	for (unsigned i = 0; i < Math::CORNER_COUNT; i++)
 	{
@@ -109,6 +114,7 @@ void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale,
 		last = *(indices_.end() - 1) + 1;
 	indices_.insert(indices_.end(), quadIndices, quadIndices + _countof(quadIndices));
 	std::transform(indices_.end() - _countof(quadIndices), indices_.end(), indices_.end() - _countof(quadIndices), [last](unsigned current) { return current + last; });
+	indexCount_ += _countof(quadIndices);
 }
 
 //void Mesh::SetVertices(Vertex vertices[], unsigned vertexCount)
@@ -121,23 +127,29 @@ void Mesh::Clear()
 {
 	vertices_.clear();
 	indices_.clear();
-	dirty_ = true;
+	indexCount_ = 0;
+	onCpu_ = true;
 }
 
-unsigned Mesh::VertexCount() const
+unsigned Mesh::IndexCount() const
 {
-	return vertices_.size();
+	return indexCount_;
+}
+
+bool Mesh::OnCPU() const
+{
+	return onCpu_;
 }
 
 void Mesh::Draw()
 {
-	if (dirty_)
-		UpdateBuffers();
+	if (onCpu_)
+		TransferToGPU();
 
 	glBindVertexArray(vao_);
 
 	//glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
-	glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, nullptr);
+	glDrawElements(GL_TRIANGLES, indexCount_, GL_UNSIGNED_INT, nullptr);
 
 	glBindVertexArray(0);
 }
@@ -183,17 +195,26 @@ void Mesh::SetupObjects()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Mesh::UpdateBuffers()
+void Mesh::TransferToGPU()
 {
-	dirty_ = false;
+	if (onCpu_)
+	{
+		onCpu_ = false;
 
-	// VBO
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-	glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(*vertices_.data()), vertices_.data(), GL_DYNAMIC_DRAW); // TODO: profile GL_DYNAMIC_DRAW
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// VBO
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+		glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(*vertices_.data()), vertices_.data(), GL_DYNAMIC_DRAW); // TODO: profile GL_DYNAMIC_DRAW
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	// EBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(*indices_.data()), indices_.data(), GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		vertices_.clear();
+		vertices_.shrink_to_fit();
+
+		// EBO
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(*indices_.data()), indices_.data(), GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		indices_.clear();
+		indices_.shrink_to_fit();
+	}
 }
