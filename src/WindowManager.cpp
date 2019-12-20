@@ -1,8 +1,7 @@
 #include "WindowManager.h"
+#include "InputManager.h"
 
 #include <glad/glad.h>
-
-#include <iostream>
 
 WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 1080))
 {
@@ -22,7 +21,7 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 
 	if (window_ == nullptr)
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+		assert(!"Failed to create GLFW window");
 		glfwTerminate();
 		exit(-1);
 	}
@@ -32,7 +31,7 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 	// Load GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		assert(!"Failed to initialize GLAD");
 		glfwTerminate();
 		exit(-1);
 	}
@@ -51,7 +50,6 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 	glEnable(GL_CULL_FACE);
 
 	// Hide and capture cursor
-	glfwSetCursorPos(window_, resolution_.x / 2, resolution_.y / 2);
 	glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -80,6 +78,7 @@ glm::ivec2 WindowManager::GetResolution() const
 void WindowManager::Maximize()
 {
 	glfwMaximizeWindow(window_);
+	glfwPollEvents();
 }
 
 WindowManager::~WindowManager()

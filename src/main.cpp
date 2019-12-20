@@ -2,7 +2,6 @@
 #include "Texture.h"
 #include "Camera.h"
 
-#include <iostream>
 
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
@@ -19,11 +18,11 @@
 int main()
 {
 	WindowManager &windowManager = WindowManager::Instance();
+	windowManager.Maximize();
 	ChunkManager &chunkManager = ChunkManager::Instance();
 	InputManager &inputManager = InputManager::Instance();
 	Player player;
 
-	windowManager.Maximize();
 
 	// Render loop
 	while (!glfwWindowShouldClose(windowManager.GetWindow()))

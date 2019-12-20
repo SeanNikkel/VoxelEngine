@@ -6,7 +6,9 @@ InputManager::InputManager() : window_(nullptr), scroll_(0.0f), mousePos_(glm::v
 	WindowManager &windowManager = WindowManager::Instance();
 	window_ = windowManager.GetWindow();
 
-	mousePos_ = { windowManager.GetResolution().x / 2.f, windowManager.GetResolution().y / 2.f };
+	double xpos, ypos;
+	glfwGetCursorPos(window_, &xpos, &ypos);
+	mousePos_ = { xpos, ypos };
 	prevMousePos_ = mousePos_;
 
 	glfwSetCursorPosCallback(window_, &InputManager::MouseCallback);

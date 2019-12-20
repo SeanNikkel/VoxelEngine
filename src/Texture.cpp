@@ -2,7 +2,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include <iostream>
 #include <algorithm>
 
 Texture::Texture(std::string path, bool alphaChannel, bool mipmap, int wrapMode, int filter)
@@ -26,7 +25,7 @@ Texture::Texture(std::string path, bool alphaChannel, bool mipmap, int wrapMode,
 	}
 	else
 	{
-		std::cout << "Failed to load texture: " << path << std::endl;
+		assert(!path.c_str());
 	}
 
 	stbi_image_free(data);

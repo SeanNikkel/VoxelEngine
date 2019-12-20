@@ -41,6 +41,7 @@ private:
 	GLuint ebo_;
 	std::vector<Vertex> vertices_;
 	std::vector<GLuint> indices_;
+	unsigned
 
 	bool dirty_ = false;
 

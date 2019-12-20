@@ -7,7 +7,6 @@
 #include <glm/gtx/norm.hpp>
 
 #include <unordered_set>
-#include <iostream>
 
 ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.frag"), texture_("resources/tileset.png", true, true, GL_REPEAT, GL_NEAREST)
 {
@@ -165,7 +164,8 @@ void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
 
 	chunk->SetBlock(pos, block);
 
-	chunk->BuildMesh();
+	if (chunk->MeshBuilt())
+		chunk->BuildMesh();
 
 	for (int d = 0; d < Math::DIRECTION_COUNT; d++)
 	{
@@ -173,7 +173,7 @@ void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
 			continue;
 
 		Chunk *adjChunk = GetChunk(pos + static_cast<glm::ivec3>(Math::directionVectors[d]));
-		if (adjChunk != nullptr && adjChunk != chunk)
+		if (adjChunk != nullptr && adjChunk != chunk && adjChunk->MeshBuilt())
 			adjChunk->BuildMesh();
 	}
 }
