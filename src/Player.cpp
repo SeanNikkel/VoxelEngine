@@ -7,7 +7,7 @@
 
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
-	Teleport(glm::vec3(0.0f, GetSize().y / 2.0f + 40.f, 0.0f));
+	Teleport(glm::vec3(0.0f, 110.f, 0.0f));
 }
 
 void Player::Update(float dt)
@@ -38,8 +38,12 @@ void Player::Update(float dt)
 		}
 	}
 
+	// Random teleport
+	if (input.GetKey(GLFW_KEY_F3))
+		Teleport(glm::vec3(fmod(glfwGetTime() * 1000.f, 640.f) - 320.f, 200.f, fmod(glfwGetTime() * 10000.f, 640.f) - 320.f));
+
 	// Look
-	glm::vec2 deltaMouse = input.GetDeltaMouse() * 0.05f;
+	glm::vec2 deltaMouse = input.GetDeltaMouse() * 0.001f;
 	camera_.SetYaw(camera_.GetYaw() + deltaMouse.x);
 	camera_.SetPitch(camera_.GetPitch() + deltaMouse.y);
 
@@ -65,19 +69,9 @@ void Player::Update(float dt)
 
 		// Move
 		if (input.GetKey(GLFW_KEY_W))
-		{
-			glm::vec3 forward = camera_.GetForward();
-			forward.y = 0.0f;
-			glm::normalize(forward);
-			dir += forward;
-		}
+			dir += camera_.GetForwardAligned();
 		if (input.GetKey(GLFW_KEY_S))
-		{
-			glm::vec3 forward = camera_.GetForward();
-			forward.y = 0.0f;
-			glm::normalize(forward);
-			dir -= forward;
-		}
+			dir -= camera_.GetForwardAligned();
 		if (input.GetKey(GLFW_KEY_A))
 			dir -= camera_.GetRight();
 		if (input.GetKey(GLFW_KEY_D))

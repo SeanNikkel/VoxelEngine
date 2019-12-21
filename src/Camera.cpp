@@ -39,7 +39,7 @@ float Camera::GetFarPlane() const
 
 glm::mat4 Camera::GetViewMatrix() const
 {
-	return glm::lookAt(pos_, pos_ + GetForward(), glm::vec3(0, 1, 0));
+	return glm::lookAt(pos_, pos_ + GetForward(), GetUp());
 }
 
 glm::mat4 Camera::GetPerspectiveMatrix(glm::vec2 screenSize) const
@@ -53,15 +53,15 @@ glm::mat4 Camera::GetPerspectiveMatrix(glm::vec2 screenSize) const
 glm::vec3 Camera::GetForward() const
 {
 	return glm::normalize(glm::vec3(
-		cos(glm::radians(pitch_)) * sin(glm::radians(yaw_)),
-		sin(glm::radians(pitch_)),
-		cos(glm::radians(pitch_)) * cos(glm::radians(yaw_))
+		cos(pitch_) * sin(yaw_),
+		sin(pitch_),
+		cos(pitch_) * cos(yaw_)
 	));
 }
 
 glm::vec3 Camera::GetRight() const
 {
-	float angle = glm::radians(yaw_) - glm::half_pi<float>();
+	float angle = yaw_ - glm::half_pi<float>();
 
 	return glm::vec3(
 		sin(angle),
@@ -73,6 +73,20 @@ glm::vec3 Camera::GetRight() const
 glm::vec3 Camera::GetUp() const
 {
 	return glm::cross(GetRight(), GetForward());
+}
+
+glm::vec3 Camera::GetForwardAligned() const
+{
+	return glm::vec3(
+		sin(yaw_),
+		0,
+		cos(yaw_)
+	);
+}
+
+glm::vec3 Camera::GetUpAligned() const
+{
+	return glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 void Camera::MoveForward(float amount)
@@ -102,12 +116,12 @@ void Camera::SetFov(float fov)
 
 void Camera::SetPitch(float pitch)
 {
-	pitch_ = glm::clamp(pitch, -89.9f, 89.9f);
+	pitch_ = glm::clamp(pitch, -glm::half_pi<float>(), glm::half_pi<float>());
 }
 
 void Camera::SetYaw(float yaw)
 {
-	yaw_ = Math::PositiveMod(yaw, 360.0f);
+	yaw_ = Math::PositiveMod(yaw, glm::two_pi<float>());
 }
 
 void Camera::SetNearPlane(float nearPlane)

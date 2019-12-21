@@ -43,7 +43,7 @@ private:
 	unsigned indexCount_;
 	unsigned reserveAmount_;
 
-	bool onCpu_ = false;
+	bool onCpu_ = true;
 
 	void SetupObjects();
 };

@@ -51,6 +51,8 @@ private:
 	~ChunkManager();
 	Chunk *AddChunk(glm::ivec2 coord);
 	bool ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos);
+	bool HasBuiltNeighbor(glm::ivec2 coord);
+	bool HasBuiltNeighbor(glm::ivec2 coord, glm::ivec2 exclude);
 	Chunk *GetChunk(glm::ivec3 pos);
 	Chunk *GetChunk(glm::ivec2 chunkCoord);
 	glm::ivec2 ToRelativePosition(glm::ivec3 pos) const;

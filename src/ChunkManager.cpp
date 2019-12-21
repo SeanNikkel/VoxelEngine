@@ -7,6 +7,7 @@
 #include <glm/gtx/norm.hpp>
 
 #include <unordered_set>
+#include <iostream>
 
 ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.frag"), texture_("resources/tileset.png", true, true, GL_REPEAT, GL_NEAREST)
 {
@@ -56,13 +57,44 @@ bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos)
 	return glm::distance2(glm::vec2(pos.x, pos.z), glm::vec2(playerPos.x, playerPos.z)) <= World::renderDistance * World::renderDistance;
 }
 
+bool ChunkManager::HasBuiltNeighbor(glm::ivec2 coord, glm::ivec2 exclude)
+{
+	for (unsigned j = 0; j < _countof(Math::surrounding); j++)
+	{
+		glm::ivec2 currentCoord = coord + Math::surrounding[j];
+
+		if (currentCoord == exclude)
+			continue;
+
+		Chunk *currentChunk = GetChunk(currentCoord);
+		if (currentChunk != nullptr && currentChunk->MeshBuilt())
+			return true;
+	}
+	return false;
+}
+
+bool ChunkManager::HasBuiltNeighbor(glm::ivec2 coord)
+{
+	return HasBuiltNeighbor(coord, coord);
+}
+
 void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 {
 	unsigned loadedChunks = 0;
 
-	for (ChunkContainer::iterator it = chunks_.begin(); it != chunks_.end(); ++it)
+	// Create initial chunk
+	glm::ivec2 playerChunkCoord = ToChunkPosition(glm::floor(playerPos));
+	Chunk *playerChunk = GetChunk(playerChunkCoord);
+	if (playerChunk == nullptr || !playerChunk->MeshBuilt())
 	{
-		// Build meshes of all chunks and 
+		loadedChunks++;
+		AddChunk(playerChunkCoord);
+	}
+
+	ChunkContainer::iterator it = chunks_.begin();
+	while (it != chunks_.end())
+	{
+		// Build meshes of all chunks and add unmeshed ones surrounding
 		if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && ChunkInRange(playerPos, it->second->GetPos()))
 		{
 			loadedChunks++;
@@ -77,38 +109,34 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 			{
 				glm::ivec2 newCoord = it->first + Math::surrounding[i];
 				ChunkContainer::iterator chunk = chunks_.find(newCoord);
-				if (chunk != chunks_.end() && !chunk->second->MeshBuilt())
+
+				if (chunk != chunks_.end() && !chunk->second->MeshBuilt() && !HasBuiltNeighbor(newCoord, it->first))
 				{
-					bool hasBuiltNeighbor = false;
-					for (unsigned j = 0; j < _countof(Math::surrounding); j++)
-					{
-						Chunk *currentChunk = GetChunk(newCoord + Math::surrounding[j]);
-						if (currentChunk != nullptr && currentChunk != it->second && currentChunk->MeshBuilt())
-						{
-							hasBuiltNeighbor = true;
-							break;
-						}
-					}
-					if (!hasBuiltNeighbor)
-					{
-						delete chunk->second;
-						chunks_.erase(chunk);
-					}
+					delete chunk->second;
+					chunks_.erase(chunk);
 				}
 			}
 
 			// Only remove mesh of chunk
 			// TODO: add separate flag so mesh can stay until deletion
-			it->second->ClearMesh();
+			if (HasBuiltNeighbor(it->first))
+			{
+				it->second->ClearMesh();
+				++it;
+			}
+			else
+			{
+				delete it->second;
+				ChunkContainer::iterator prev = it;
+				++it;
+				chunks_.erase(prev);
+			}
 		}
+		else
+			++it;
 	}
 
-	if (chunks_.size() == 0)
-	{
-		AddChunk(ToChunkPosition(glm::floor(playerPos)));
-	}
-
-	// Bad draw
+	//// Bad draw
 	//SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 0 });
 	//for (int y = -20; y <= 20; y++)
 	//{

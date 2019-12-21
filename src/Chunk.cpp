@@ -188,7 +188,8 @@ bool Chunk::IsVisible(const Math::Frustum &camera) const
 
 void Chunk::Draw()
 {
-	mesh_.Draw();
+	if (MeshBuilt())
+		mesh_.Draw();
 }
 
 // lowest x and z corner

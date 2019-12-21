@@ -23,6 +23,9 @@ public:
 	glm::vec3 GetRight() const;
 	glm::vec3 GetUp() const;
 
+	glm::vec3 GetForwardAligned() const;
+	glm::vec3 GetUpAligned() const;
+
 	void MoveForward(float amount);
 	void MoveRight(float amount);
 	void MoveUp(float amount);

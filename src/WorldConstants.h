@@ -12,7 +12,7 @@ namespace World
 
 	const float gravity = 9.8f;
 
-	const unsigned chunkHeight = 64;
+	const unsigned chunkHeight = 256;
 	const unsigned chunkSize = 16;
 
 	const unsigned chunkArea = chunkSize * chunkSize;
@@ -22,8 +22,8 @@ namespace World
 	{
 		// Mountain noise
 		const float heightScale = 128.0f;
-		const float heightWeight = 0.9f;
-		const unsigned heightMaxHeight = 63;
+		const float heightWeight = 0.8f;
+		const unsigned heightMaxHeight = 255;
 
 		// Hill noise
 		const float detailScale = 16.0f;
