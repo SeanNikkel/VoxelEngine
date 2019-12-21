@@ -122,6 +122,7 @@ void Chunk::BuildMesh()
 			}
 		}
 	}
+	mesh_.TransferToGPU();
 }
 
 void Chunk::ClearMesh()
