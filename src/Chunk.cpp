@@ -3,15 +3,12 @@
 #include "glm/gtc/noise.hpp"
 #include "glm/gtx/compatibility.hpp"
 
-Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 8), heightTimer_(0.0f), heightTimerIncreasing_(true)
+Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 8), heightTimer_(0.0f), heightTimerIncreasing_(true), highestSolidBlock_(0)
 {
 }
 
 void Chunk::Generate(TerrainGenerator &gen)
 {
-	int min_height = World::chunkHeight / 5;
-	int max_height = World::chunkHeight / 4;
-
 	glm::ivec3 chunk_pos = GetWorldPos();
 
 	for (int z = 0; z < World::chunkSize; z++)
@@ -36,14 +33,13 @@ void Chunk::Generate(TerrainGenerator &gen)
 			}
 		}
 	}
-
 }
 
 void Chunk::BuildMesh()
 {
 	mesh_.Clear();
 
-	for (int y = 0; y < World::chunkHeight; y++)
+	for (int y = 0; y <= highestSolidBlock_; y++)
 	{
 		for (int z = 0; z < World::chunkSize; z++)
 		{
@@ -176,7 +172,11 @@ void Chunk::UpdateHeightTimer(float dt)
 {
 	if (MeshBuilt())
 	{
-		heightTimer_ += World::chunkFloatSpeed * dt * (heightTimerIncreasing_ ? 1.0f : -1.0f);
+		if (heightTimerIncreasing_)
+			heightTimer_ += World::chunkFloatInSpeed * dt;
+		else
+			heightTimer_ -= World::chunkFloatOutSpeed * dt;
+
 		heightTimer_ = glm::clamp(heightTimer_, 0.0f, 1.0f);
 	}
 }
@@ -243,6 +243,9 @@ const Block &Chunk::GetBlockLocal(glm::ivec3 pos) const
 void Chunk::SetBlockLocal(glm::ivec3 pos, const Block &block)
 {
 	blocks_[pos.x + pos.y * World::chunkArea + pos.z * World::chunkSize] = block;
+
+	if (pos.y > highestSolidBlock_)
+		highestSolidBlock_ = pos.y;
 }
 
 bool Chunk::CheckForBlock(glm::ivec3 pos) const
