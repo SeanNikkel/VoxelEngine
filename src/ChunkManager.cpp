@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtx/norm.hpp>
 
-#include <unordered_set>
+#include <iostream>
 
 ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.frag"), texture_("resources/tileset.png", true, true, GL_REPEAT, GL_NEAREST)
 {
@@ -86,11 +86,12 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 {
 	unsigned loadedChunks = 0;
 
-	// Create initial chunk
+	// Create initial chunks
 	glm::ivec2 playerChunkCoord = ToChunkPosition(glm::floor(playerPos));
 	Chunk *playerChunk = GetChunk(playerChunkCoord);
 	if (playerChunk == nullptr || !playerChunk->MeshBuilt())
 	{
+		// Cross shape
 		loadedChunks++;
 		AddChunk(playerChunkCoord);
 		for (int i = 0; i < Math::DIRECTION_COUNT; i++)
@@ -213,12 +214,9 @@ void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
 	if (chunk->MeshBuilt())
 		chunk->BuildMesh();
 
-	for (int d = 0; d < Math::DIRECTION_COUNT; d++)
+	for (int i = 0; i < _countof(Math::surrounding); i++)
 	{
-		if (d == Math::DIRECTION_UP || d == Math::DIRECTION_DOWN)
-			continue;
-
-		Chunk *adjChunk = GetChunk(pos + static_cast<glm::ivec3>(Math::directionVectors[d]));
+		Chunk *adjChunk = GetChunk(pos + glm::ivec3(Math::surrounding[i].x, 0.0f, Math::surrounding[i].y));
 		if (adjChunk != nullptr && adjChunk != chunk && adjChunk->MeshBuilt())
 			adjChunk->BuildMesh();
 	}
