@@ -16,8 +16,8 @@ void Player::Update(float dt)
 	ChunkManager &chunk = ChunkManager::Instance();
 
 	// Build
-	bool placing = input.GetKey(GLFW_MOUSE_BUTTON_RIGHT);
-	bool destroying = input.GetKey(GLFW_MOUSE_BUTTON_LEFT);
+	bool placing = input.GetKeyPressed(GLFW_MOUSE_BUTTON_RIGHT);
+	bool destroying = input.GetKeyPressed(GLFW_MOUSE_BUTTON_LEFT);
 	if (placing != destroying)
 	{
 		ChunkManager::RaycastResult raycast = chunk.Raycast(camera_.GetPosition(), camera_.GetForward(), INFINITY);

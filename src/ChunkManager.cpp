@@ -60,8 +60,9 @@ bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos)
 	return glm::distance2(glm::vec2(pos.x, pos.z), glm::vec2(playerPos.x, playerPos.z)) <= World::renderDistance * World::renderDistance;
 }
 
-bool ChunkManager::HasBuiltNeighbor(glm::ivec2 coord, glm::ivec2 exclude)
+int ChunkManager::BuiltNeighborCount(glm::ivec2 coord, glm::ivec2 exclude)
 {
+	unsigned count = 0;
 	for (unsigned j = 0; j < _countof(Math::surrounding); j++)
 	{
 		glm::ivec2 currentCoord = coord + Math::surrounding[j];
@@ -71,14 +72,14 @@ bool ChunkManager::HasBuiltNeighbor(glm::ivec2 coord, glm::ivec2 exclude)
 
 		Chunk *currentChunk = GetChunk(currentCoord);
 		if (currentChunk != nullptr && currentChunk->MeshBuilt())
-			return true;
+			count++;
 	}
-	return false;
+	return count;
 }
 
-bool ChunkManager::HasBuiltNeighbor(glm::ivec2 coord)
+int ChunkManager::BuiltNeighborCount(glm::ivec2 coord)
 {
-	return HasBuiltNeighbor(coord, coord);
+	return BuiltNeighborCount(coord, coord);
 }
 
 void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
@@ -92,6 +93,14 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 	{
 		loadedChunks++;
 		AddChunk(playerChunkCoord);
+		for (int i = 0; i < Math::DIRECTION_COUNT; i++)
+		{
+			if (i == Math::DIRECTION_UP || i == Math::DIRECTION_DOWN)
+				continue;
+
+			loadedChunks++;
+			AddChunk(playerChunkCoord + glm::ivec2(Math::directionVectors[i].x, Math::directionVectors[i].z));
+		}
 	}
 
 	ChunkContainer::iterator it = chunks_.begin();
@@ -105,7 +114,7 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 		if (inRange)
 		{
 			// Build meshes of all chunks and add unmeshed ones surrounding
-			if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt())
+			if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && BuiltNeighborCount(it->first) >= 3)
 			{
 				loadedChunks++;
 				AddChunk(it->first);
@@ -129,7 +138,7 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 				glm::ivec2 newCoord = it->first + Math::surrounding[i];
 				ChunkContainer::iterator chunk = chunks_.find(newCoord);
 
-				if (chunk != chunks_.end() && !chunk->second->MeshBuilt() && !HasBuiltNeighbor(newCoord, it->first))
+				if (chunk != chunks_.end() && !chunk->second->MeshBuilt() && BuiltNeighborCount(newCoord, it->first) == 0)
 				{
 					delete chunk->second;
 					chunks_.erase(chunk);
@@ -137,7 +146,7 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 			}
 
 			// Only remove mesh of chunk
-			if (HasBuiltNeighbor(it->first))
+			if (BuiltNeighborCount(it->first) > 0)
 			{
 				it->second->ClearMesh();
 				++it;
