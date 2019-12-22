@@ -24,7 +24,12 @@ public:
 	const Block &GetBlock(glm::ivec3 pos) const;
 
 	glm::ivec2 GetCoord() const;
-	glm::vec3 GetPos() const;
+	glm::vec3 GetWorldPos() const;
+	glm::vec3 GetRenderPos() const; // affected by height
+
+	void UpdateHeightTimer(float dt);
+	void SetHeightTimerDirection(bool increasing);
+	bool HeightTimerEmpty() const;
 
 	bool IsVisible(const Math::Frustum &camera) const;
 
@@ -33,11 +38,12 @@ public:
 private:
 	glm::ivec2 position_;
 	Mesh mesh_;
+	float heightTimer_; // 0: down, 1: up
+	bool heightTimerIncreasing_;
 	
 	// low to high: x, z, y
 	std::array<Block, World::chunkSize * World::chunkSize * World::chunkHeight> blocks_ = {};
 
-	glm::ivec2 GetWorldPos() const;
 	glm::ivec3 WorldToLocal(glm::ivec3 pos) const;
 	glm::ivec3 LocalToWorld(glm::ivec3 pos) const;
 	bool OutOfBounds(glm::ivec3 pos) const;

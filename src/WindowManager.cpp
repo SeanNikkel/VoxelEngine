@@ -2,6 +2,7 @@
 #include "InputManager.h"
 
 #include <glad/glad.h>
+#include <iostream>
 
 WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 1080))
 {
@@ -13,11 +14,6 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 
 	// Create a window
 	window_ = glfwCreateWindow(resolution_.x, resolution_.y, "Voxel", nullptr, nullptr);
-
-	//const GLFWvidmode *mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	//screenWidth = mode->width;
-	//screenHeight = mode->height;
-	//GLFWwindow *window = glfwCreateWindow(screenWidth, screenHeight, "Voxel", glfwGetPrimaryMonitor(), nullptr);
 
 	if (window_ == nullptr)
 	{
@@ -40,8 +36,7 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 	glViewport(0, 0, resolution_.x, resolution_.y);
 
 	// Set background color
-	//glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
-	glClearColor(0.4f, 0.7f, 1.0f, 1.0f); // sky
+	SetClearColor({ 0.4f, 0.7f, 1.0f }); // sky
 
 	// Z-buffer testing
 	glEnable(GL_DEPTH_TEST);
@@ -61,7 +56,7 @@ void WindowManager::Update()
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR)
 	{
-		//std::cout << std::hex << err << std::endl;
+		std::cout << std::hex << err << std::endl;
 	}
 }
 
@@ -73,6 +68,17 @@ GLFWwindow *WindowManager::GetWindow() const
 glm::ivec2 WindowManager::GetResolution() const
 {
 	return resolution_;
+}
+
+glm::vec3 WindowManager::GetClearColor() const
+{
+	return clearColor_;
+}
+
+void WindowManager::SetClearColor(glm::vec3 color)
+{
+	clearColor_ = color;
+	glClearColor(color.r, color.g, color.b, 1.0f);
 }
 
 void WindowManager::Maximize()

@@ -3,7 +3,7 @@
 #include "glm/gtc/noise.hpp"
 #include "glm/gtx/compatibility.hpp"
 
-Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 4)
+Chunk::Chunk(glm::ivec2 pos) : position_(pos), mesh_(World::chunkArea * 8), heightTimer_(0.0f), heightTimerIncreasing_(true)
 {
 }
 
@@ -12,13 +12,13 @@ void Chunk::Generate(TerrainGenerator &gen)
 	int min_height = World::chunkHeight / 5;
 	int max_height = World::chunkHeight / 4;
 
-	glm::ivec2 chunk_pos = GetWorldPos();
+	glm::ivec3 chunk_pos = GetWorldPos();
 
 	for (int z = 0; z < World::chunkSize; z++)
 	{
 		for (int x = 0; x < World::chunkSize; x++)
 		{
-			glm::ivec2 pos = chunk_pos + glm::ivec2(x, z);
+			glm::ivec2 pos = glm::ivec2(chunk_pos.x + x, chunk_pos.z + z);
 			int height = gen.GetHeight(pos);
 
 			for (int y = 0; y < height; y++)
@@ -128,6 +128,7 @@ void Chunk::BuildMesh()
 void Chunk::ClearMesh()
 {
 	mesh_.Clear();
+	heightTimer_ = 0.0f;
 }
 
 bool Chunk::MeshBuilt() const
@@ -160,14 +161,39 @@ glm::ivec2 Chunk::GetCoord() const
 	return position_;
 }
 
-glm::vec3 Chunk::GetPos() const
+glm::vec3 Chunk::GetWorldPos() const
 {
 	return glm::vec3(position_.x * (float)World::chunkSize, 0, position_.y * (float)World::chunkSize);
 }
 
+glm::vec3 Chunk::GetRenderPos() const
+{
+	float t = 1.0f - heightTimer_;
+	return GetWorldPos() - glm::vec3(0.0f, glm::lerp(0.0f, World::chunkFloatDistance, t * t * t), 0.0f);
+}
+
+void Chunk::UpdateHeightTimer(float dt)
+{
+	if (MeshBuilt())
+	{
+		heightTimer_ += World::chunkFloatSpeed * dt * (heightTimerIncreasing_ ? 1.0f : -1.0f);
+		heightTimer_ = glm::clamp(heightTimer_, 0.0f, 1.0f);
+	}
+}
+
+void Chunk::SetHeightTimerDirection(bool increasing)
+{
+	heightTimerIncreasing_ = increasing;
+}
+
+bool Chunk::HeightTimerEmpty() const
+{
+	return heightTimer_ == 0.0f;
+}
+
 bool Chunk::IsVisible(const Math::Frustum &camera) const
 {
-	glm::vec3 position = GetPos();
+	glm::vec3 position = GetRenderPos();
 
 	for (unsigned i = 0; i < _countof(camera.planes); i++)
 	{
@@ -192,22 +218,16 @@ void Chunk::Draw()
 		mesh_.Draw();
 }
 
-// lowest x and z corner
-glm::ivec2 Chunk::GetWorldPos() const
-{
-	return glm::vec2(position_.x, position_.y) * (float)World::chunkSize;
-}
-
 glm::ivec3 Chunk::WorldToLocal(glm::ivec3 pos) const
 {
-	glm::ivec2 world = GetWorldPos();
-	return glm::ivec3(pos.x - world.x, pos.y, pos.z - world.y);
+	glm::vec3 world = GetWorldPos();
+	return glm::ivec3(pos.x - world.x, pos.y, pos.z - world.z);
 }
 
 glm::ivec3 Chunk::LocalToWorld(glm::ivec3 pos) const
 {
-	glm::ivec2 world = GetWorldPos();
-	return glm::ivec3(pos.x + world.x, pos.y, pos.z + world.y);
+	glm::vec3 world = GetWorldPos();
+	return glm::ivec3(pos.x + world.x, pos.y, pos.z + world.z);
 }
 
 bool Chunk::OutOfBounds(glm::ivec3 pos) const

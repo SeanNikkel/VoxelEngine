@@ -30,7 +30,7 @@ public:
 		Math::Direction normal;
 	};
 
-	void UpdateChunks(glm::vec3 playerPos);
+	void UpdateChunks(glm::vec3 playerPos, float dt);
 	void DrawChunks(const glm::mat4 &cameraMatrix);
 
 	void SetBlock(glm::ivec3 pos, const Block &block);

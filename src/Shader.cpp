@@ -105,6 +105,12 @@ void Shader::SetVar(const char *name, float value) const
 	glUniform1f(glGetUniformLocation(id_, name), value);
 }
 
+void Shader::SetVar(const char *name, const glm::vec3 &value) const
+{
+	Use();
+	glUniform3f(glGetUniformLocation(id_, name), value.x, value.y, value.z);
+}
+
 void Shader::SetVar(const char *name, const glm::mat4 &value) const
 {
 	Use();

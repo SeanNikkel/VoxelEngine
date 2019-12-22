@@ -7,7 +7,7 @@
 
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
-	Teleport(glm::vec3(0.0f, 110.f, 0.0f));
+	Teleport(glm::vec3(0.0f, 120.f, 0.0f));
 }
 
 void Player::Update(float dt)
@@ -83,7 +83,7 @@ void Player::Update(float dt)
 		// Jump
 		if (canJump_ && input.GetKey(GLFW_KEY_SPACE))
 		{
-			SetVelocity(glm::vec3(0.0f, 5.0f, 0.0f));
+			SetVelocity(glm::vec3(0.0f, 10.0f, 0.0f));
 			canJump_ = false;
 		}
 

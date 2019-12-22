@@ -20,6 +20,9 @@ public:
 	GLFWwindow *GetWindow() const;
 	glm::ivec2 GetResolution() const;
 
+	glm::vec3 GetClearColor() const;
+	void SetClearColor(glm::vec3 color);
+
 	void Maximize();
 
 	~WindowManager();
@@ -27,6 +30,7 @@ public:
 private:
 	GLFWwindow *window_;
 	glm::ivec2 resolution_;
+	glm::vec3 clearColor_;
 
 	static void ResizeCallback(GLFWwindow *window, int width, int height);
 

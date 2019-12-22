@@ -1,17 +1,20 @@
 #include "ChunkManager.h"
 #include "Math.h"
 #include "WorldConstants.h"
+#include "WindowManager.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glm/gtx/norm.hpp>
 
 #include <unordered_set>
-#include <iostream>
 
 ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.frag"), texture_("resources/tileset.png", true, true, GL_REPEAT, GL_NEAREST)
 {
 	shader_.SetVar("tex", 0);
+	shader_.SetVar("fogMin", World::renderDistance * 0.25f);
+	shader_.SetVar("fogMax", World::renderDistance * 1.5f);
+	shader_.SetVar("fogColor", WindowManager::Instance().GetClearColor());
 }
 
 ChunkManager::~ChunkManager()
@@ -78,7 +81,7 @@ bool ChunkManager::HasBuiltNeighbor(glm::ivec2 coord)
 	return HasBuiltNeighbor(coord, coord);
 }
 
-void ChunkManager::UpdateChunks(glm::vec3 playerPos)
+void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 {
 	unsigned loadedChunks = 0;
 
@@ -94,15 +97,18 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos)
 	ChunkContainer::iterator it = chunks_.begin();
 	while (it != chunks_.end())
 	{
+		// Update the height timer
+		it->second->UpdateHeightTimer(dt);
+
 		// Build meshes of all chunks and add unmeshed ones surrounding
-		if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && ChunkInRange(playerPos, it->second->GetPos()))
+		if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && ChunkInRange(playerPos, it->second->GetWorldPos()))
 		{
 			loadedChunks++;
 			AddChunk(it->first);
 		}
 
 		// Unload if too far
-		if (it->second->MeshBuilt() && !ChunkInRange(playerPos, it->second->GetPos()))
+		if (it->second->MeshBuilt() && !ChunkInRange(playerPos, it->second->GetWorldPos()))
 		{
 			// Delete surrounding chunks unconnected otherwise
 			for (unsigned i = 0; i < _countof(Math::surrounding); i++)
@@ -166,7 +172,7 @@ void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix)
 	{
 		if (c.second->IsVisible(camera))
 		{
-			shader_.SetVar("MVP", glm::translate(cameraMatrix, c.second->GetPos()));
+			shader_.SetVar("MVP", glm::translate(cameraMatrix, c.second->GetRenderPos()));
 			texture_.Activate(GL_TEXTURE0);
 
 			c.second->Draw();

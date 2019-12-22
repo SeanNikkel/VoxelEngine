@@ -37,7 +37,7 @@ int main()
 		// Update
 		windowManager.Update();
 		player.Update(deltaTime);
-		chunkManager.UpdateChunks(player.GetCamera().GetPosition());
+		chunkManager.UpdateChunks(player.GetCamera().GetPosition(), deltaTime);
 		inputManager.Update();
 
 		// Draw

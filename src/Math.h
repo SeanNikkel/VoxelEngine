@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/compatibility.hpp>
 
 namespace Math
 {
