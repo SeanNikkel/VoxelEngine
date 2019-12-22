@@ -38,22 +38,18 @@ void Player::Update(float dt)
 		}
 	}
 
-	// Random teleport
-	if (input.GetKey(GLFW_KEY_F3))
-		Teleport(glm::vec3(fmod(glfwGetTime() * 1000.f, 640.f) - 320.f, 200.f, fmod(glfwGetTime() * 10000.f, 640.f) - 320.f));
-
 	// Look
 	glm::vec2 deltaMouse = input.GetDeltaMouse() * 0.001f;
 	camera_.SetYaw(camera_.GetYaw() + deltaMouse.x);
 	camera_.SetPitch(camera_.GetPitch() + deltaMouse.y);
 
 	// Noclip
-	if (input.GetKey(GLFW_KEY_F1))
+	if (input.GetKeyPressed(GLFW_KEY_F1))
 		noclip_ = !noclip_;
 
 	// Wireframe
 	static bool wireframe = false;
-	if (input.GetKey(GLFW_KEY_F2))
+	if (input.GetKeyPressed(GLFW_KEY_F2))
 	{
 		wireframe = !wireframe;
 
@@ -62,6 +58,10 @@ void Player::Update(float dt)
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+
+	// Random teleport
+	if (input.GetKeyPressed(GLFW_KEY_F3))
+		Teleport(glm::vec3(fmod(glfwGetTime() * 1000.f, 640.f) - 320.f, 200.f, fmod(glfwGetTime() * 10000.f, 640.f) - 320.f));
 
 	if (!noclip_)
 	{
