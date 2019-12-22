@@ -15,7 +15,7 @@ public:
 
 	WindowManager();
 
-	void Update();
+	void Update(float dt);
 
 	GLFWwindow *GetWindow() const;
 	glm::ivec2 GetResolution() const;

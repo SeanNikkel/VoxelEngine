@@ -35,7 +35,7 @@ int main()
 		lastFrame = currentFrame;
 
 		// Update
-		windowManager.Update();
+		windowManager.Update(deltaTime);
 		player.Update(deltaTime);
 		chunkManager.UpdateChunks(player.GetCamera().GetPosition(), deltaTime);
 		inputManager.Update();

@@ -2,7 +2,7 @@
 #include "InputManager.h"
 
 #include <glad/glad.h>
-#include <iostream>
+#include <string>
 
 WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 1080))
 {
@@ -48,16 +48,28 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 	glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void WindowManager::Update()
+void WindowManager::Update(float dt)
 {
 	if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window_, true);
 
-	GLenum err;
+	// Framerate
+	static unsigned frameCount = 0;
+	static float frameTimer = 0.0f;
+	frameCount++;
+	frameTimer += dt;
+	if (frameTimer >= 1.0f)
+	{
+		glfwSetWindowTitle(window_, ("Voxel - " + std::to_string(frameCount) + " FPS").c_str());
+		frameCount = 0;
+		frameTimer = 0.0f;
+	}
+
+	/*GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR)
 	{
 		std::cout << std::hex << err << std::endl;
-	}
+	}*/
 }
 
 GLFWwindow *WindowManager::GetWindow() const
