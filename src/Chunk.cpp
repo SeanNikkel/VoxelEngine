@@ -181,14 +181,14 @@ void Chunk::UpdateHeightTimer(float dt)
 	}
 }
 
-void Chunk::SetHeightTimerDirection(bool increasing)
+void Chunk::SetHeightTimerIncreasing(bool increasing)
 {
 	heightTimerIncreasing_ = increasing;
 }
 
-bool Chunk::HeightTimerEmpty() const
+bool Chunk::HeightTimerHitZero() const
 {
-	return heightTimer_ == 0.0f;
+	return heightTimer_ == 0.0f && !heightTimerIncreasing_;
 }
 
 bool Chunk::IsVisible(const Math::Frustum &camera) const

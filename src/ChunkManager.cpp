@@ -97,18 +97,31 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 	ChunkContainer::iterator it = chunks_.begin();
 	while (it != chunks_.end())
 	{
+		bool inRange = ChunkInRange(playerPos, it->second->GetWorldPos());
+
 		// Update the height timer
 		it->second->UpdateHeightTimer(dt);
 
-		// Build meshes of all chunks and add unmeshed ones surrounding
-		if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && ChunkInRange(playerPos, it->second->GetWorldPos()))
+		if (inRange)
 		{
-			loadedChunks++;
-			AddChunk(it->first);
+			// Build meshes of all chunks and add unmeshed ones surrounding
+			if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt())
+			{
+				loadedChunks++;
+				AddChunk(it->first);
+			}
+
+			// Move up if in range
+			it->second->SetHeightTimerIncreasing(true);
+		}
+		// Move down if out of range
+		else if (it->second->MeshBuilt())
+		{
+			it->second->SetHeightTimerIncreasing(false);
 		}
 
-		// Unload if too far
-		if (it->second->MeshBuilt() && !ChunkInRange(playerPos, it->second->GetWorldPos()))
+		// Unload if all the way down
+		if (it->second->HeightTimerHitZero())
 		{
 			// Delete surrounding chunks unconnected otherwise
 			for (unsigned i = 0; i < _countof(Math::surrounding); i++)
@@ -124,7 +137,6 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 			}
 
 			// Only remove mesh of chunk
-			// TODO: add separate flag so mesh can stay until deletion
 			if (HasBuiltNeighbor(it->first))
 			{
 				it->second->ClearMesh();

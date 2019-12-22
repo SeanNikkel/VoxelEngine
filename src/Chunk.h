@@ -28,8 +28,8 @@ public:
 	glm::vec3 GetRenderPos() const; // affected by height
 
 	void UpdateHeightTimer(float dt);
-	void SetHeightTimerDirection(bool increasing);
-	bool HeightTimerEmpty() const;
+	void SetHeightTimerIncreasing(bool increasing);
+	bool HeightTimerHitZero() const;
 
 	bool IsVisible(const Math::Frustum &camera) const;
 
