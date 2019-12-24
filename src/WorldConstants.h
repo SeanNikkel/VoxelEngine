@@ -34,8 +34,11 @@ namespace World
 		const unsigned detailMaxHeight = 63;
 		const unsigned minHeight = 1;
 
-		// Blocks/sample (unused)
-		const float lerpGridSize = 2.0f;
+		// Trees
+		const unsigned minTreeDistance = 3;
+
+		// Interpolation grid size
+		const float terrainInterpGrid = 2.0f;
 
 		const float detailWeight = 1.0f - heightWeight;
 	}

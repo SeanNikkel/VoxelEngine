@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <vector>
 
 #include <glm/glm.hpp>
 
@@ -14,6 +15,8 @@ class TerrainGenerator
 {
 public:
 	int GetHeight(glm::vec2 pos);
+
+	std::vector<glm::ivec2> GenerateTreePoints(glm::ivec2 chunkCoord);
 
 private:
 	static const unsigned cacheCapacity = 64;
