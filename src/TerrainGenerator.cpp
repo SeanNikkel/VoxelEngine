@@ -93,7 +93,7 @@ float TerrainGenerator::GetPerlinHeight(glm::vec2 pos)
 	float height = ((glm::perlin(pos / static_cast<float>(Gen::heightScale)) + 1) / 2) * Gen::heightWeight * Gen::heightMaxHeight +
 				   ((glm::perlin(pos / static_cast<float>(Gen::detailScale)) + 1) / 2) * Gen::detailWeight * Gen::detailMaxHeight;
 
-	height *= (glm::clamp(glm::perlin(pos / static_cast<float>(Gen::landScale)) * 4.0f, -1.0f, 1.0f) + 1.0f) / 2.0f;
+	height *= (glm::clamp((glm::perlin(pos / static_cast<float>(Gen::landScale)) + Gen::landMountainBias * 2.0f) * Gen::landTransitionSharpness, -1.0f + Gen::landMinMult * 2.0f, 1.0f) + 1.0f) / 2.0f;
 
 	height += Gen::minHeight;
 

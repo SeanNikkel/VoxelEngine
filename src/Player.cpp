@@ -5,9 +5,12 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <random>
+#include <iostream>
+
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
-	Teleport(glm::vec3(0.0f, 120.f, 0.0f));
+	Teleport(glm::vec3(519.0f, 159.0f, -315.5f));
 }
 
 void Player::Update(float dt)
@@ -61,7 +64,12 @@ void Player::Update(float dt)
 
 	// Random teleport
 	if (input.GetKeyPressed(GLFW_KEY_F3))
-		Teleport(glm::vec3(fmod(glfwGetTime() * 1000.f, 640.f) - 320.f, 200.f, fmod(glfwGetTime() * 10000.f, 640.f) - 320.f));
+	{
+		static std::default_random_engine rng((unsigned)glfwGetTime());
+		static std::uniform_real_distribution<float> dist(-10000.0f, 10000.0f);
+		
+		Teleport(glm::vec3(dist(rng), 200, dist(rng)));
+	}
 
 	if (!noclip_)
 	{
@@ -116,6 +124,8 @@ void Player::Update(float dt)
 
 	// Update camera
 	camera_.SetPosition(GetPosition() + glm::vec3(0.0f, GetSize().y * 0.4f, 0.0f));
+
+	std::cout << GetPosition().x << ' ' << GetPosition().y << ' ' << GetPosition().z << std::endl;
 }
 
 const Camera &Player::GetCamera() const
