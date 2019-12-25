@@ -11,6 +11,8 @@ void Chunk::Generate(TerrainGenerator &gen)
 {
 	glm::ivec3 chunk_pos = GetWorldPos();
 
+	treePoints_ = gen.GenerateTreePoints(GetCoord());
+
 	for (int z = 0; z < World::chunkSize; z++)
 	{
 		for (int x = 0; x < World::chunkSize; x++)
@@ -22,7 +24,7 @@ void Chunk::Generate(TerrainGenerator &gen)
 			{
 				Block block;
 
-				if (y < height - 4)
+				if (y < height - 8)
 					block = { Block::BLOCK_STONE };
 				else if (y < height - 1)
 					block = { Block::BLOCK_DIRT };
@@ -33,6 +35,7 @@ void Chunk::Generate(TerrainGenerator &gen)
 			}
 		}
 	}
+	//for (int i = 0; i < )
 }
 
 void Chunk::BuildMesh()

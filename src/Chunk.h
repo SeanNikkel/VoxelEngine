@@ -41,6 +41,7 @@ private:
 	float heightTimer_; // 0: down, 1: up
 	bool heightTimerIncreasing_;
 	int highestSolidBlock_; // Currently stores highest ever existed
+	std::vector<glm::ivec2> treePoints_;
 	
 	// low to high: x, z, y
 	std::array<Block, World::chunkSize * World::chunkSize * World::chunkHeight> blocks_ = {};

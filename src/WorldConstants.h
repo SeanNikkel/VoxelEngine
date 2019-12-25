@@ -24,6 +24,11 @@ namespace World
 
 	namespace Generation
 	{
+		const unsigned minHeight = 1;
+
+		// Biome noise
+		const float landScale = 2048.0f;
+
 		// Mountain noise
 		const float heightScale = 128.0f;
 		const float heightWeight = 0.8f;
@@ -32,13 +37,12 @@ namespace World
 		// Hill noise
 		const float detailScale = 16.0f;
 		const unsigned detailMaxHeight = 63;
-		const unsigned minHeight = 1;
 
 		// Trees
-		const unsigned minTreeDistance = 3;
+		const unsigned minTreeDistance = 4;
 
 		// Interpolation grid size
-		const float terrainInterpGrid = 2.0f;
+		const float terrainInterpGrid = 4.0f;
 
 		const float detailWeight = 1.0f - heightWeight;
 	}

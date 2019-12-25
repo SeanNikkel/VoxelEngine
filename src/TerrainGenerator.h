@@ -19,7 +19,7 @@ public:
 	std::vector<glm::ivec2> GenerateTreePoints(glm::ivec2 chunkCoord);
 
 private:
-	static const unsigned cacheCapacity = 64;
+	static const unsigned cacheCapacity = 128;
 
 	std::array<HeightCache, cacheCapacity> cache_;
 	unsigned cacheSize_ = 0;
