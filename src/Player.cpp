@@ -18,9 +18,39 @@ void Player::Update(float dt)
 	InputManager &input = InputManager::Instance();
 	ChunkManager &chunk = ChunkManager::Instance();
 
+	// Noclip
+	if (input.GetKeyPressed(GLFW_KEY_F1))
+		noclip_ = !noclip_;
+
+	// Wireframe
+	static bool wireframe = false;
+	if (input.GetKeyPressed(GLFW_KEY_F2))
+	{
+		wireframe = !wireframe;
+
+		if (wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
+	// Random teleport
+	if (input.GetKeyPressed(GLFW_KEY_F3))
+	{
+		static std::default_random_engine rng((unsigned)glfwGetTime());
+		static std::uniform_real_distribution<float> dist(-10000.0f, 10000.0f);
+
+		Teleport(glm::vec3(dist(rng), 200, dist(rng)));
+	}
+
+	// Fast place
+	static bool fastPlace = false;
+	if (input.GetKeyPressed(GLFW_KEY_F4))
+		fastPlace = !fastPlace;
+
 	// Build
-	bool placing = input.GetKeyPressed(GLFW_MOUSE_BUTTON_RIGHT);
-	bool destroying = input.GetKeyPressed(GLFW_MOUSE_BUTTON_LEFT);
+	bool placing = fastPlace ? input.GetKey(GLFW_MOUSE_BUTTON_RIGHT) : input.GetKeyPressed(GLFW_MOUSE_BUTTON_RIGHT);
+	bool destroying = fastPlace ? input.GetKey(GLFW_MOUSE_BUTTON_LEFT) : input.GetKeyPressed(GLFW_MOUSE_BUTTON_LEFT);
 	if (placing != destroying)
 	{
 		ChunkManager::RaycastResult raycast = chunk.Raycast(camera_.GetPosition(), camera_.GetForward(), INFINITY);
@@ -45,31 +75,6 @@ void Player::Update(float dt)
 	glm::vec2 deltaMouse = input.GetDeltaMouse() * 0.001f;
 	camera_.SetYaw(camera_.GetYaw() + deltaMouse.x);
 	camera_.SetPitch(camera_.GetPitch() + deltaMouse.y);
-
-	// Noclip
-	if (input.GetKeyPressed(GLFW_KEY_F1))
-		noclip_ = !noclip_;
-
-	// Wireframe
-	static bool wireframe = false;
-	if (input.GetKeyPressed(GLFW_KEY_F2))
-	{
-		wireframe = !wireframe;
-
-		if (wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		else
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-
-	// Random teleport
-	if (input.GetKeyPressed(GLFW_KEY_F3))
-	{
-		static std::default_random_engine rng((unsigned)glfwGetTime());
-		static std::uniform_real_distribution<float> dist(-10000.0f, 10000.0f);
-		
-		Teleport(glm::vec3(dist(rng), 200, dist(rng)));
-	}
 
 	if (!noclip_)
 	{
