@@ -35,14 +35,14 @@ namespace World
 		// Mountain noise
 		const float heightScale = 128.0f;
 		const float heightWeight = 0.8f;
-		const unsigned heightMaxHeight = 255;
+		const unsigned heightMaxHeight = 250;
 
 		// Hill noise
 		const float detailScale = 16.0f;
-		const unsigned detailMaxHeight = 63;
+		const unsigned detailMaxHeight = 100;
 
 		// Trees
-		const unsigned minTreeDistance = 4;
+		const float treeDensity = 0.03f;
 
 		// Interpolation grid size
 		const float terrainInterpGrid = 4.0f;

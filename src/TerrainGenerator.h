@@ -16,10 +16,16 @@ class TerrainGenerator
 public:
 	int GetHeight(glm::vec2 pos);
 
-	std::vector<glm::ivec2> GenerateTreePoints(glm::ivec2 chunkCoord);
+	// [start, end)
+	std::vector<glm::ivec2> GenerateTreePoints(glm::ivec2 startCorner, glm::ivec2 endCorner);
+
+	// This should be deserialized
+	// y, x, z
+	static const int tree[10][7][7];
 
 private:
 	static const unsigned cacheCapacity = 128;
+
 
 	std::array<HeightCache, cacheCapacity> cache_;
 	unsigned cacheSize_ = 0;

@@ -11,8 +11,7 @@ void Chunk::Generate(TerrainGenerator &gen)
 {
 	glm::ivec3 chunk_pos = GetWorldPos();
 
-	treePoints_ = gen.GenerateTreePoints(GetCoord());
-
+	// Terrain
 	for (int z = 0; z < World::chunkSize; z++)
 	{
 		for (int x = 0; x < World::chunkSize; x++)
@@ -35,7 +34,36 @@ void Chunk::Generate(TerrainGenerator &gen)
 			}
 		}
 	}
-	//for (int i = 0; i < )
+	
+	// Trees
+	glm::ivec3 treeSize = { _countof(*TerrainGenerator::tree), _countof(TerrainGenerator::tree), _countof(**TerrainGenerator::tree) };
+	glm::ivec2 treeRad = { (treeSize.x - 1) / 2, (treeSize.z - 1) / 2 };
+	glm::ivec2 chunkPos2d = { chunk_pos.x, chunk_pos.z };
+	std::vector<glm::ivec2> treePoints = gen.GenerateTreePoints(chunkPos2d - treeRad, chunkPos2d + glm::ivec2(World::chunkSize, World::chunkSize) + treeRad);
+
+	for (unsigned i = 0; i < treePoints.size(); i++)
+	{
+		for (int y = 0; y < treeSize.y; y++)
+		{
+			for (int x = -treeRad.x; x <= treeRad.x; x++)
+			{
+				for (int z = -treeRad.y; z <= treeRad.y; z++)
+				{
+					Block newBlock = { Block::BlockType(TerrainGenerator::tree[y][x + treeRad.x][z + treeRad.y]) };
+
+					if (newBlock.type != Block::BLOCK_AIR)
+					{
+						glm::ivec3 blockPos = { treePoints[i].x + x, gen.GetHeight(treePoints[i]) + y, treePoints[i].y + z };
+
+						const Block &oldBlock = GetBlock(blockPos);
+
+						if (!(newBlock.type == Block::BLOCK_LEAVES && oldBlock.type != Block::BLOCK_AIR))
+							SetBlock(blockPos, newBlock);
+					}
+				}
+			}
+		}
+	}
 }
 
 void Chunk::BuildMesh()

@@ -10,7 +10,7 @@
 
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
-	Teleport(glm::vec3(519.0f, 159.0f, -315.5f));
+	Teleport(glm::vec3(520.5f, 170.0f, -320.5f));
 }
 
 void Player::Update(float dt)

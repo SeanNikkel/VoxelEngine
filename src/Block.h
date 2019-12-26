@@ -21,6 +21,8 @@ struct Block
 		BLOCK_GRASS,
 		BLOCK_DIRT,
 		BLOCK_STONE,
+		BLOCK_LOG,
+		BLOCK_LEAVES,
 
 		BLOCK_COUNT
 	};
@@ -40,6 +42,8 @@ namespace BlockData
 		0,
 		{ 2, 1, 0 },
 		0,
-		3
+		3,
+		{ 5, 4, 5 },
+		6,
 	};
 }

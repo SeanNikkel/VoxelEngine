@@ -10,6 +10,99 @@
 
 namespace Gen = World::Generation;
 
+const int TerrainGenerator::tree[10][7][7] = {
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 4, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 4, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 4, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 5, 5, 5, 5, 5, 0 },
+		{ 5, 5, 5, 4, 5, 5, 5 },
+		{ 0, 5, 5, 5, 5, 5, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 0, 5, 4, 5, 0, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 5, 5, 5, 5, 5, 0 },
+		{ 0, 5, 5, 4, 5, 5, 0 },
+		{ 0, 5, 5, 5, 5, 5, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 5, 4, 5, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 5, 5, 4, 5, 5, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 5, 5, 5, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+	{
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 5, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+		{ 0, 0, 0, 0, 0, 0, 0 },
+	},
+};
+
 int TerrainGenerator::GetHeight(glm::vec2 pos)
 {
 	glm::vec2 scaled = pos / Gen::terrainInterpGrid;
@@ -46,39 +139,28 @@ int TerrainGenerator::GetHeight(glm::vec2 pos)
 		return static_cast<int>(glm::lerp(minH, maxH, (pos.x - min.x) / (max.x - min.x)));
 }
 
-std::vector<glm::ivec2> TerrainGenerator::GenerateTreePoints(glm::ivec2 chunkCoord)
+std::vector<glm::ivec2> TerrainGenerator::GenerateTreePoints(glm::ivec2 startCorner, glm::ivec2 endCorner)
 {
 	std::vector<glm::ivec2> points;
-	std::default_random_engine rng(std::hash<glm::ivec2>()(chunkCoord));
-	std::uniform_int_distribution<int> dist(0, World::chunkSize - 1);
+	std::hash<glm::ivec2> hash;
+	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 	unsigned attempts = 0;
 
-	while (attempts <= 10)
+	for (int z = startCorner.y; z < endCorner.y; z++)
 	{
-		glm::ivec2 point = { dist(rng), dist(rng) };
-
-		bool withinDist = false;
-		for (unsigned i = 0; i < points.size(); i++)
+		for (int x = startCorner.x; x < endCorner.x; x++)
 		{
-			glm::ivec2 dif = point - points[i];
-			if (dif.x * dif.x + dif.y * dif.y < Gen::minTreeDistance * Gen::minTreeDistance)
+			glm::ivec2 pos = { x, z };
+			std::default_random_engine rng(hash(pos));
+
+			if (dist(rng) <= Gen::treeDensity)
 			{
-				withinDist = true;
-				break;
+				points.push_back(pos);
 			}
 		}
-
-		if (withinDist)
-		{
-			attempts++;
-		}
-		else
-		{
-			attempts = 0;
-			points.push_back(point);
-		}
 	}
+
 	return points;
 }
 
