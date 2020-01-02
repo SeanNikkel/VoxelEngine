@@ -29,16 +29,16 @@ namespace World
 		// Biome noise
 		const float landScale = 2048.0f;
 		const float landMinMult = 0.1f;
-		const float landTransitionSharpness = 10.0f;
+		const float landTransitionSharpness = 2.0f;
 		const float landMountainBias = 0.2f; // -1 (flat) to 1 (mountains)
 
 		// Mountain noise
-		const float heightScale = 128.0f;
+		const float heightScale = 256.0f;
 		const float heightWeight = 0.8f;
 		const unsigned heightMaxHeight = 250;
 
 		// Hill noise
-		const float detailScale = 16.0f;
+		const float detailScale = 32.0f;
 		const unsigned detailMaxHeight = 100;
 
 		// Trees

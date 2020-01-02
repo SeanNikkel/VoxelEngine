@@ -110,15 +110,15 @@ int TerrainGenerator::GetHeight(glm::vec2 pos)
 	glm::vec2 max = glm::ceil(scaled) * Gen::terrainInterpGrid;
 
 	if (min == max)
-		return static_cast<int>(GetPerlinHeight(pos));
+		return static_cast<int>(GetNoiseHeight(pos));
 
 	// interp x and y
 	if (min.x != max.x && min.y != max.y)
 	{
-		float bl = GetPerlinHeight(min);
-		float tr = GetPerlinHeight(max);
-		float tl = GetPerlinHeight({ min.x, max.y });
-		float br = GetPerlinHeight({ max.x, min.y });
+		float bl = GetNoiseHeight(min);
+		float tr = GetNoiseHeight(max);
+		float tl = GetNoiseHeight({ min.x, max.y });
+		float br = GetNoiseHeight({ max.x, min.y });
 
 		float tx = (pos.x - min.x) / (max.x - min.x);
 		float ty = (pos.y - min.y) / (max.y - min.y);
@@ -130,8 +130,8 @@ int TerrainGenerator::GetHeight(glm::vec2 pos)
 	}
 	
 	// 1D interp
-	float minH = GetPerlinHeight(min);
-	float maxH = GetPerlinHeight(max);
+	float minH = GetNoiseHeight(min);
+	float maxH = GetNoiseHeight(max);
 
 	if (min.x == max.x)
 		return static_cast<int>(glm::lerp(minH, maxH, (pos.y - min.y) / (max.y - min.y)));
@@ -164,7 +164,7 @@ std::vector<glm::ivec2> TerrainGenerator::GenerateTreePoints(glm::ivec2 startCor
 	return points;
 }
 
-float TerrainGenerator::GetPerlinHeight(glm::vec2 pos)
+float TerrainGenerator::GetNoiseHeight(glm::vec2 pos)
 {
 	// Check cache
 	float cache = GetFromCache(pos);
@@ -172,10 +172,10 @@ float TerrainGenerator::GetPerlinHeight(glm::vec2 pos)
 		return cache;
 
 	// Calculate
-	float height = ((glm::perlin(pos / static_cast<float>(Gen::heightScale)) + 1) / 2) * Gen::heightWeight * Gen::heightMaxHeight +
-				   ((glm::perlin(pos / static_cast<float>(Gen::detailScale)) + 1) / 2) * Gen::detailWeight * Gen::detailMaxHeight;
+	float height = ((glm::simplex(pos / static_cast<float>(Gen::heightScale)) + 1) / 2) * Gen::heightWeight * Gen::heightMaxHeight +
+				   ((glm::simplex(pos / static_cast<float>(Gen::detailScale)) + 1) / 2) * Gen::detailWeight * Gen::detailMaxHeight;
 
-	height *= (glm::clamp((glm::perlin(pos / static_cast<float>(Gen::landScale)) + Gen::landMountainBias * 2.0f) * Gen::landTransitionSharpness, -1.0f + Gen::landMinMult * 2.0f, 1.0f) + 1.0f) / 2.0f;
+	height *= (glm::clamp((glm::simplex(pos / static_cast<float>(Gen::landScale)) + Gen::landMountainBias * 2.0f) * Gen::landTransitionSharpness, -1.0f + Gen::landMinMult * 2.0f, 1.0f) + 1.0f) / 2.0f;
 
 	height += Gen::minHeight;
 

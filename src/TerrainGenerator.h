@@ -30,7 +30,7 @@ private:
 	std::array<HeightCache, cacheCapacity> cache_;
 	unsigned cacheSize_ = 0;
 
-	float GetPerlinHeight(glm::vec2 pos);
+	float GetNoiseHeight(glm::vec2 pos);
 	void AddToCache(glm::vec2 pos, float height);
 	float GetFromCache(glm::vec2 pos);
 };
