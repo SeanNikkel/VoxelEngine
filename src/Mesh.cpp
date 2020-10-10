@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+// Convenient quad vertices
 const Vertex Mesh::quads[Math::DIRECTION_COUNT][Math::CORNER_COUNT] =
 {
 	// QUAD_LEFT
@@ -53,6 +54,7 @@ const Vertex Mesh::quads[Math::DIRECTION_COUNT][Math::CORNER_COUNT] =
 	},
 };
 
+// Indices for above vertices
 const unsigned Mesh::quadIndices[] = { 0, 1, 2, 2, 1, 3 };
 
 Mesh::Mesh(unsigned reserve) : reserveAmount_(reserve)
@@ -60,29 +62,20 @@ Mesh::Mesh(unsigned reserve) : reserveAmount_(reserve)
 	SetupObjects();
 }
 
-//Mesh::Mesh(Vertex vertices[], unsigned vertexCount)
-//{
-//	SetupObjects();
-//	SetVertices(vertices, vertexCount);
-//}
-//
-//void Mesh::AddVertex(const Vertex &vertex)
-//{
-//	vertices_.insert(vertices_.end(), vertex);
-//	dirty_ = true;
-//}
-
 void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale, glm::vec2 uvOffset, unsigned char ambients[])
 {
+	// Reserve for performance
 	if (vertices_.capacity() == 0)
 	{
 		vertices_.reserve(reserveAmount_);
 		indices_.reserve(unsigned(reserveAmount_ * 1.5f));
 	}
 
+	// Insert base quad
 	vertices_.insert(vertices_.end(), &quads[orientation][0], &quads[orientation][Math::CORNER_COUNT]);
 	onCpu_ = true;
 	
+	// Transform quad data by parameters given
 	for (unsigned i = 0; i < Math::CORNER_COUNT; i++)
 	{
 		unsigned current = vertices_.size() - (Math::CORNER_COUNT - i);
@@ -95,33 +88,35 @@ void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale,
 			vertices_[current].ambient = ambients[i];
 	}
 
-	if (ambients != nullptr)
+	// Flip quad if the ambient data needs a flipped quad to interpolate correctly
+	if (ambients != nullptr && ambients[0] + ambients[3] > ambients[1] + ambients[2])
 	{
-		if (ambients[0] + ambients[3] > ambients[1] + ambients[2])
-		{
-			// Flip quad
-			std::swap(*(vertices_.end() - 4), *(vertices_.end() - 2));
-			std::swap(*(vertices_.end() - 3), *(vertices_.end() - 1));
-			std::swap(*(vertices_.end() - 3), *(vertices_.end() - 2));
-		}
+		std::swap(*(vertices_.end() - 4), *(vertices_.end() - 2));
+		std::swap(*(vertices_.end() - 3), *(vertices_.end() - 1));
+		std::swap(*(vertices_.end() - 3), *(vertices_.end() - 2));
 	}
 
-	// This needs to be changed if meshes support non-quads
-	unsigned last;
-	if (indices_.size() == 0)
-		last = 0;
-	else
+	// Get next index to use (1 + last one in list)
+	unsigned last = 0;
+	if (indices_.size() != 0)
 		last = *(indices_.end() - 1) + 1;
-	indices_.insert(indices_.end(), quadIndices, quadIndices + _countof(quadIndices));
-	std::transform(indices_.end() - _countof(quadIndices), indices_.end(), indices_.end() - _countof(quadIndices), [last](unsigned current) { return current + last; });
-	indexCount_ += _countof(quadIndices);
-}
 
-//void Mesh::SetVertices(Vertex vertices[], unsigned vertexCount)
-//{
-//	Clear();
-//	vertices_.insert(vertices_.end(), vertices, &vertices[vertexCount]);
-//}
+	// Insert base quad indices
+	indices_.insert(
+		indices_.end(),
+		quadIndices,
+		quadIndices + std::size(quadIndices)
+	);
+
+	// Add the index offset to the base indices
+	std::transform(
+		indices_.end() - std::size(quadIndices),
+		indices_.end(),
+		indices_.end() - std::size(quadIndices),
+		[last](unsigned current) { return current + last; }
+	);
+	indexCount_ += std::size(quadIndices);
+}
 
 void Mesh::Clear()
 {
@@ -143,12 +138,13 @@ bool Mesh::OnCPU() const
 
 void Mesh::Draw()
 {
+	// Mesh must be on gpu to draw
 	if (onCpu_)
 		TransferToGPU();
 
 	glBindVertexArray(vao_);
 
-	//glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
+	// Draw
 	glDrawElements(GL_TRIANGLES, indexCount_, GL_UNSIGNED_INT, nullptr);
 
 	glBindVertexArray(0);
@@ -164,12 +160,10 @@ Mesh::~Mesh()
 void Mesh::SetupObjects()
 {
 	// VBO
-
 	glGenBuffers(1, &vbo_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 
 	// VAO
-
 	glGenVertexArrays(1, &vao_);
 	glBindVertexArray(vao_);
 
@@ -187,7 +181,6 @@ void Mesh::SetupObjects()
 	glEnableVertexAttribArray(3);
 
 	// EBO
-
 	glGenBuffers(1, &ebo_);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
 
@@ -201,19 +194,21 @@ void Mesh::TransferToGPU()
 	{
 		onCpu_ = false;
 
-		// VBO
+		// Send VBO
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-		glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(*vertices_.data()), vertices_.data(), GL_DYNAMIC_DRAW); // TODO: profile GL_DYNAMIC_DRAW
+		glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(*vertices_.data()), vertices_.data(), GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+		// Remove cpu data
 		vertices_.clear();
 		vertices_.shrink_to_fit();
 
-		// EBO
+		// Send EBO
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(*indices_.data()), indices_.data(), GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+		// Remove cpu data
 		indices_.clear();
 		indices_.shrink_to_fit();
 	}

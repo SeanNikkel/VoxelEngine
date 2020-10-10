@@ -1,10 +1,10 @@
 #version 330 core
 
-out vec4 FragColor;
+out vec4 fragColor;
 
-in vec2 TexCoord;
-in vec3 Normal;
-in float Ambient;
+in vec2 texCoord;
+in vec3 normal;
+in float ambient;
 
 uniform sampler2D tex;
 uniform float fogMin;
@@ -13,10 +13,18 @@ uniform vec3 fogColor;
 
 void main()
 {
-	vec4 texCol = texture(tex, TexCoord);
-	float sun = max(0.5, dot(Normal, vec3(-0.8, 1.0, -0.6)));
-	float ambient = (Ambient + 1.0) / 4.0;
+	vec4 texCol = texture(tex, texCoord);
+
+	// Directional diffuse
+	float sun = max(0.5, dot(normal, vec3(-0.8, 1.0, -0.6)));
+
+	// Ambient occlusion light value
+	float ambient = (ambient + 1.0) / 4.0;
+
+	// Fog amount
 	float fog = clamp(((gl_FragCoord.z / gl_FragCoord.w) - fogMin) / (fogMax - fogMin), 0.0, 1.0);
-    FragColor = vec4(texCol.rgb * sun * ambient, texCol.a);
-	FragColor = mix(FragColor, vec4(fogColor, 1.0), fog);
+
+	// Output fragment
+    fragColor = vec4(texCol.rgb * sun * ambient, texCol.a);
+	fragColor = mix(fragColor, vec4(fogColor, 1.0), fog); // apply fog
 } 

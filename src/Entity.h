@@ -4,16 +4,19 @@
 
 #include <glm/glm.hpp>
 
+// Defines an object that can move in the world
 class Entity
 {
 public:
 	Entity();
 	void Update(float dt);
 
+	// Getters
 	glm::vec3 GetPosition() const;
 	glm::vec3 GetVelocity() const;
 	glm::vec3 GetSize() const;
 
+	// Movement
 	void Move(glm::vec3 delta);
 	void Teleport(glm::vec3 destination);
 

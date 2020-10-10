@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <string>
 
-WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 1080))
+WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1280, 720))
 {
 	// Initialize GLFW
 	glfwInit();
@@ -50,10 +50,11 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1920, 
 
 void WindowManager::Update(float dt)
 {
+	// Escape to exit
 	if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window_, true);
 
-	// Framerate
+	// Framerate display
 	static unsigned frameCount = 0;
 	static float frameTimer = 0.0f;
 	frameCount++;
@@ -64,12 +65,6 @@ void WindowManager::Update(float dt)
 		frameCount = 0;
 		frameTimer = 0.0f;
 	}
-
-	/*GLenum err;
-	while ((err = glGetError()) != GL_NO_ERROR)
-	{
-		std::cout << std::hex << err << std::endl;
-	}*/
 }
 
 GLFWwindow *WindowManager::GetWindow() const
@@ -96,7 +91,7 @@ void WindowManager::SetClearColor(glm::vec3 color)
 void WindowManager::Maximize()
 {
 	glfwMaximizeWindow(window_);
-	glfwPollEvents();
+	glfwPollEvents(); // prevents jolt
 }
 
 WindowManager::~WindowManager()

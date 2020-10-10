@@ -1,5 +1,6 @@
 #pragma once
 
+// Textures for each side of a block
 struct SideTextureIndicies
 {
 	SideTextureIndicies(int i) : top(i), side(i), bottom(i) {}
@@ -10,6 +11,7 @@ struct SideTextureIndicies
 	unsigned bottom;
 };
 
+// Defines info for each block
 struct Block
 {
 	// This matches order in sprite sheet
@@ -35,6 +37,7 @@ struct Block
 	}
 };
 
+// Block-texture data
 namespace BlockData
 {
 	static const SideTextureIndicies sideIndicies[Block::BLOCK_COUNT] =

@@ -10,7 +10,8 @@
 
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
-	Teleport(glm::vec3(520.5f, 170.0f, -320.5f));
+	// Hardcoded starting coords
+	Teleport(glm::vec3(520.5f, 102.0f, -320.5f));
 }
 
 void Player::Update(float dt)
@@ -53,6 +54,7 @@ void Player::Update(float dt)
 	bool destroying = fastPlace ? input.GetKey(GLFW_MOUSE_BUTTON_LEFT) : input.GetKeyPressed(GLFW_MOUSE_BUTTON_LEFT);
 	if (placing != destroying)
 	{
+		// Perform raycast
 		ChunkManager::RaycastResult raycast = chunk.Raycast(camera_.GetPosition(), camera_.GetForward(), INFINITY);
 
 		if (raycast.hit)
@@ -60,13 +62,13 @@ void Player::Update(float dt)
 			glm::ivec3 pos = raycast.block.first;
 
 			if (destroying)
-				chunk.SetBlock(pos, { Block::BLOCK_AIR });
+				chunk.SetBlock(pos, { Block::BLOCK_AIR }); // Set to air if destroying
 			if (placing)
 			{
 				pos += glm::ivec3(Math::directionVectors[raycast.normal]);
 
 				if (!Math::AABBCollision(GetPosition(), GetSize(), glm::vec3(pos) + glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)))
-					chunk.SetBlock(pos, { Block::BLOCK_DIRT });
+					chunk.SetBlock(pos, { Block::BLOCK_DIRT }); // Set to dirt if placing and not overlapping player
 			}
 		}
 	}
@@ -80,7 +82,7 @@ void Player::Update(float dt)
 	{
 		glm::vec3 dir = glm::vec3(0.0f);
 
-		// Move
+		// Move input
 		if (input.GetKey(GLFW_KEY_W))
 			dir += camera_.GetForwardAligned();
 		if (input.GetKey(GLFW_KEY_S))
@@ -90,7 +92,8 @@ void Player::Update(float dt)
 		if (input.GetKey(GLFW_KEY_D))
 			dir += camera_.GetRight();
 
-		if (glm::dot(dir, dir) != 0)
+		// Move
+		if (dir != glm::vec3(0.0f))
 			Move(glm::normalize(dir) * (input.GetKey(GLFW_KEY_LEFT_SHIFT) ? 10.f : 5.f) * dt);
 
 		// Jump
@@ -123,14 +126,12 @@ void Player::Update(float dt)
 		if (input.GetKey(GLFW_KEY_LEFT_CONTROL))
 			dir -= camera_.GetUp();
 
-		if (glm::dot(dir, dir) != 0)
+		if (dir != glm::vec3(0.0f))
 			Teleport(GetPosition() + glm::normalize(dir) * (input.GetKey(GLFW_KEY_LEFT_SHIFT) ? 100.f : 10.f) * dt);
 	}
 
 	// Update camera
 	camera_.SetPosition(GetPosition() + glm::vec3(0.0f, GetSize().y * 0.4f, 0.0f));
-
-	std::cout << GetPosition().x << ' ' << GetPosition().y << ' ' << GetPosition().z << std::endl;
 }
 
 const Camera &Player::GetCamera() const

@@ -7,7 +7,7 @@
 
 #include <string>
 
-
+// Wrapper for graphics api shaders
 class Shader
 {
 public:

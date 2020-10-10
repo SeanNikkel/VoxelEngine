@@ -3,14 +3,17 @@
 
 InputManager::InputManager() : window_(nullptr), scroll_(0.0f), mousePos_(glm::vec2(0.0f, 0.0f)), prevMousePos_(glm::vec2(0.0f, 0.0f))
 {
+	// Get window
 	WindowManager &windowManager = WindowManager::Instance();
 	window_ = windowManager.GetWindow();
 
+	// Get mouse variables
 	double xpos, ypos;
 	glfwGetCursorPos(window_, &xpos, &ypos);
 	mousePos_ = { xpos, ypos };
 	prevMousePos_ = mousePos_;
 
+	// Set glfw callbacks
 	glfwSetKeyCallback(window_, &InputManager::KeyCallback);
 	glfwSetCursorPosCallback(window_, &InputManager::MouseCallback);
 	glfwSetMouseButtonCallback(window_, &InputManager::MouseButtonCallback);
@@ -68,6 +71,7 @@ void InputManager::KeyCallback(GLFWwindow *window, int key, int scancode, int ac
 {
 	InputManager &input = InputManager::Instance();
 
+	// Add or set key data in keyStates_
 	switch (action)
 	{
 	case GLFW_PRESS:

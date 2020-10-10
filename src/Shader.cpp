@@ -4,28 +4,32 @@
 
 Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 {
-	// Retrieve the vertex/fragment source code from the filePath
 	std::string vertexCode;
 	std::string fragmentCode;
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
 
-	// Make ifstream objects throw exceptions
+	// Make ifstreams throw exceptions
 	vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+	// Read in source code
 	try
 	{
 		// Open files
 		vShaderFile.open(vertexPath);
 		fShaderFile.open(fragmentPath);
 		std::stringstream vShaderStream, fShaderStream;
-		// Read file's buffer contents into streams
+
+		// Read files into streams
 		vShaderStream << vShaderFile.rdbuf();
 		fShaderStream << fShaderFile.rdbuf();
-		// close file handlers
+
+		// Close files
 		vShaderFile.close();
 		fShaderFile.close();
-		// convert stream into string
+
+		// Convert stream into string
 		vertexCode = vShaderStream.str();
 		fragmentCode = fShaderStream.str();
 	}
@@ -35,16 +39,17 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 	}
 	const char *vShaderCode = vertexCode.c_str();
 	const char *fShaderCode = fragmentCode.c_str();
-	// 2. compile shaders
+
 	unsigned int vertex, fragment;
 	int success;
 	char infoLog[512];
 
-	// vertex Shader
+	// Compile vertex shader
 	vertex = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex, 1, &vShaderCode, NULL);
 	glCompileShader(vertex);
-	// print compile errors if any
+
+	// Error checking
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
@@ -52,11 +57,12 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 		assert(false);
 	};
 
-	// similiar for Fragment Shader
+	// Compile fragment shader
 	fragment = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment, 1, &fShaderCode, NULL);
 	glCompileShader(fragment);
-	// print compile errors if any
+
+	// Error checking
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
@@ -64,12 +70,13 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 		assert(false);
 	};
 
-	// shader Program
+	// Create shader program
 	id_ = glCreateProgram();
 	glAttachShader(id_, vertex);
 	glAttachShader(id_, fragment);
 	glLinkProgram(id_);
-	// print linking errors if any
+
+	// Error checking
 	glGetProgramiv(id_, GL_LINK_STATUS, &success);
 	if (!success)
 	{
@@ -77,7 +84,7 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 		assert(false);
 	}
 
-	// delete the shaders as they're linked into our program now and no longer necessery
+	// Delete the unlinked shaders
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
 }

@@ -4,11 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// Handles camera data and matrix generation
 class Camera
 {
 public:
 	Camera(glm::vec3 position, float fov = 75.0f);
 
+	// Camera getters
 	glm::vec3 GetPosition() const;
 	float GetFov() const;
 	float GetPitch() const;
@@ -16,20 +18,23 @@ public:
 	float GetNearPlane() const;
 	float GetFarPlane() const;
 
+	// Matrix getters
 	glm::mat4 GetViewMatrix() const;
 	glm::mat4 GetPerspectiveMatrix(glm::vec2 screenSize) const;
 
+	// Vector getters
 	glm::vec3 GetForward() const;
 	glm::vec3 GetRight() const;
 	glm::vec3 GetUp() const;
-
 	glm::vec3 GetForwardAligned() const;
 	glm::vec3 GetUpAligned() const;
 
+	// Movement setters
 	void MoveForward(float amount);
 	void MoveRight(float amount);
 	void MoveUp(float amount);
 
+	// Camera setters
 	void SetPosition(glm::vec3 pos);
 	void SetFov(float fov);
 	void SetPitch(float pitch);

@@ -17,12 +17,12 @@
 
 int main()
 {
+	// Create game systems
 	WindowManager &windowManager = WindowManager::Instance();
 	windowManager.Maximize();
 	ChunkManager &chunkManager = ChunkManager::Instance();
 	InputManager &inputManager = InputManager::Instance();
 	Player player;
-
 
 	// Render loop
 	while (!glfwWindowShouldClose(windowManager.GetWindow()))

@@ -52,6 +52,7 @@ glm::mat4 Camera::GetPerspectiveMatrix(glm::vec2 screenSize) const
 
 glm::vec3 Camera::GetForward() const
 {
+	// Spherical coordinates
 	return glm::normalize(glm::vec3(
 		cos(pitch_) * sin(yaw_),
 		sin(pitch_),

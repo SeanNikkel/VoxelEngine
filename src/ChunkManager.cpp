@@ -11,6 +11,7 @@
 
 ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.frag"), texture_("resources/tileset.png", true, true, GL_REPEAT, GL_NEAREST)
 {
+	// Default uniform variables
 	shader_.SetVar("tex", 0);
 	shader_.SetVar("fogMin", World::renderDistance * 0.25f);
 	shader_.SetVar("fogMax", World::renderDistance * 1.5f);
@@ -23,23 +24,24 @@ ChunkManager::~ChunkManager()
 		delete c.second;
 }
 
-// Adds completed chunk to buffer, generates surrounding chunks
 Chunk *ChunkManager::AddChunk(glm::ivec2 coord)
 {
 	Chunk *currentChunk = GetChunk(coord);
 	if (currentChunk == nullptr)
 	{
+		// Generate this chunk
 		currentChunk = new Chunk(coord);
 		currentChunk->Generate(noise_);
 		chunks_[coord] = currentChunk;
 	}
 	else if (currentChunk->MeshBuilt())
 	{
+		// Chunk already exists
 		return currentChunk;
 	}
 
 	// Generate surrounding chunks and add
-	for (unsigned i = 0; i < _countof(Math::surrounding); i++)
+	for (unsigned i = 0; i < std::size(Math::surrounding); i++)
 	{
 		glm::ivec2 newCoord = coord + Math::surrounding[i];
 		if (GetChunk(newCoord) == nullptr)
@@ -50,34 +52,40 @@ Chunk *ChunkManager::AddChunk(glm::ivec2 coord)
 		}
 	}
 
+	// Build this chunk's mesh
 	currentChunk->BuildMesh();
 	return currentChunk;
 }
 
-bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos)
+bool ChunkManager::ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos) const
 {
+	// Check if chunk is closer to player than render distance
 	glm::vec3 pos = chunkPos + glm::vec3(World::chunkSize, 0.0f, World::chunkSize) / 2.f;
-	return glm::distance2(glm::vec2(pos.x, pos.z), glm::vec2(playerPos.x, playerPos.z)) <= World::renderDistance * World::renderDistance;
+	float distanceSquared = glm::distance2(glm::vec2(pos.x, pos.z), glm::vec2(playerPos.x, playerPos.z));
+	return distanceSquared <= World::renderDistance * World::renderDistance;
 }
 
-int ChunkManager::BuiltNeighborCount(glm::ivec2 coord, glm::ivec2 exclude)
+int ChunkManager::BuiltNeighborCount(glm::ivec2 coord, glm::ivec2 exclude) const
 {
 	unsigned count = 0;
-	for (unsigned j = 0; j < _countof(Math::surrounding); j++)
+	
+	// Loop over surrounding chunks
+	for (unsigned j = 0; j < std::size(Math::surrounding); j++)
 	{
 		glm::ivec2 currentCoord = coord + Math::surrounding[j];
 
 		if (currentCoord == exclude)
 			continue;
 
-		Chunk *currentChunk = GetChunk(currentCoord);
+		// Count chunk if it's built
+		const Chunk *currentChunk = GetChunk(currentCoord);
 		if (currentChunk != nullptr && currentChunk->MeshBuilt())
 			count++;
 	}
 	return count;
 }
 
-int ChunkManager::BuiltNeighborCount(glm::ivec2 coord)
+int ChunkManager::BuiltNeighborCount(glm::ivec2 coord) const
 {
 	return BuiltNeighborCount(coord, coord);
 }
@@ -86,12 +94,12 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 {
 	unsigned loadedChunks = 0;
 
-	// Create initial chunks
+	// Create initial chunks 
 	glm::ivec2 playerChunkCoord = ToChunkPosition(glm::floor(playerPos));
 	Chunk *playerChunk = GetChunk(playerChunkCoord);
 	if (playerChunk == nullptr || !playerChunk->MeshBuilt())
 	{
-		// Cross shape
+		// Create 3x3 cross shape of chunks on player
 		loadedChunks++;
 		AddChunk(playerChunkCoord);
 		for (int i = 0; i < Math::DIRECTION_COUNT; i++)
@@ -104,15 +112,14 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 		}
 	}
 
+	// Update all chunks
 	ChunkContainer::iterator it = chunks_.begin();
 	while (it != chunks_.end())
 	{
-		bool inRange = ChunkInRange(playerPos, it->second->GetWorldPos());
-
 		// Update the height timer
 		it->second->UpdateHeightTimer(dt);
 
-		if (inRange)
+		if (ChunkInRange(playerPos, it->second->GetWorldPos()))
 		{
 			// Build meshes of all chunks and add unmeshed ones surrounding
 			if (loadedChunks < World::renderSpeed && !it->second->MeshBuilt() && BuiltNeighborCount(it->first) >= 3)
@@ -134,7 +141,7 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 		if (it->second->HeightTimerHitZero())
 		{
 			// Delete surrounding chunks unconnected otherwise
-			for (unsigned i = 0; i < _countof(Math::surrounding); i++)
+			for (unsigned i = 0; i < std::size(Math::surrounding); i++)
 			{
 				glm::ivec2 newCoord = it->first + Math::surrounding[i];
 				ChunkContainer::iterator chunk = chunks_.find(newCoord);
@@ -163,37 +170,21 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 		else
 			++it;
 	}
-
-	//// Bad draw
-	//SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 0 });
-	//for (int y = -20; y <= 20; y++)
-	//{
-	//	for (int x = -20; x <= 20; x++)
-	//	{
-	//		Chunk *chunk = GetChunk({ x, y });
-	//		if (chunk == nullptr)
-	//			std::cout << " ";
-	//		else if (chunk->MeshBuilt())
-	//			std::cout << ".";
-	//		else
-	//			std::cout << "#";
-
-	//		std::cout << " ";
-	//	}
-	//	std::cout << std::endl;
-	//}
 }
 
 void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix)
 {
 	shader_.Use();
 
+	// Calculate camera frustum
 	Math::Frustum camera = Math::CalculateFrustum(cameraMatrix);
 
 	for (const auto &c : chunks_)
 	{
+		// Frustum culling
 		if (c.second->IsVisible(camera))
 		{
+			// Set shader/texture
 			shader_.SetVar("MVP", glm::translate(cameraMatrix, c.second->GetRenderPos()));
 			texture_.Activate(GL_TEXTURE0);
 
@@ -211,10 +202,12 @@ void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
 
 	chunk->SetBlock(pos, block);
 
+	// Rebuild chunk mesh after modification
 	if (chunk->MeshBuilt())
 		chunk->BuildMesh();
 
-	for (int i = 0; i < _countof(Math::surrounding); i++)
+	// Rebuild surrounding chunks if block was on edge
+	for (std::size_t i = 0; i < std::size(Math::surrounding); i++)
 	{
 		Chunk *adjChunk = GetChunk(pos + glm::ivec3(Math::surrounding[i].x, 0.0f, Math::surrounding[i].y));
 		if (adjChunk != nullptr && adjChunk != chunk && adjChunk->MeshBuilt())
@@ -239,6 +232,7 @@ std::vector<ChunkManager::BlockInfo> ChunkManager::GetBlocksInVolume(glm::vec3 p
 {
 	std::vector<BlockInfo> result;
 
+	// AABB bounds
 	float xmin = pos.x - size.x / 2.f;
 	float xmax = pos.x + size.x / 2.f;
 	float ymin = pos.y - size.y / 2.f;
@@ -246,6 +240,7 @@ std::vector<ChunkManager::BlockInfo> ChunkManager::GetBlocksInVolume(glm::vec3 p
 	float zmin = pos.z - size.z / 2.f;
 	float zmax = pos.z + size.z / 2.f;
 
+	// AABB collision with blcok grid via indexing
 	for (int x = (int)glm::floor(xmin); x <= (int)glm::floor(xmax - (glm::fract(xmax) == 0.0f ? 1.0f : 0.0f)); x++)
 	{
 		for (int y = (int)glm::floor(ymin); y <= (int)glm::floor(ymax - (glm::fract(ymax) == 0.0f ? 1.0f : 0.0f)); y++)
@@ -339,6 +334,12 @@ ChunkManager::RaycastResult ChunkManager::Raycast(glm::vec3 pos, glm::vec3 dir, 
 
 Chunk *ChunkManager::GetChunk(glm::ivec3 pos)
 {
+	// Chunks arent const, cast is safe
+	return const_cast<Chunk *>(static_cast<const ChunkManager &>(*this).GetChunk(pos));
+}
+
+const Chunk *ChunkManager::GetChunk(glm::ivec3 pos) const
+{
 	if (pos.y < 0 || pos.y >= World::chunkHeight)
 		return nullptr;
 
@@ -346,6 +347,12 @@ Chunk *ChunkManager::GetChunk(glm::ivec3 pos)
 }
 
 Chunk *ChunkManager::GetChunk(glm::ivec2 chunkCoord)
+{
+	// Chunks arent const, cast is safe
+	return const_cast<Chunk *>(static_cast<const ChunkManager &>(*this).GetChunk(chunkCoord));
+}
+
+const Chunk *ChunkManager::GetChunk(glm::ivec2 chunkCoord) const
 {
 	auto result = chunks_.find(chunkCoord);
 
@@ -363,9 +370,9 @@ glm::ivec2 ChunkManager::ToRelativePosition(glm::ivec3 pos) const
 glm::ivec2 ChunkManager::ToChunkPosition(glm::ivec3 pos) const
 {
 	if (pos.x < 0)
-		pos.x -= 15;
+		pos.x -= World::chunkSize - 1;
 	if (pos.z < 0)
-		pos.z-= 15;
+		pos.z -= World::chunkSize - 1;
 
 	return glm::ivec2(pos.x / (int)World::chunkSize, pos.z / (int)World::chunkSize);
 }

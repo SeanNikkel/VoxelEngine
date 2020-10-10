@@ -32,28 +32,32 @@ void Entity::Move(glm::vec3 delta)
 	// Check x, then z, then y
 	int axes[] = { Math::AXIS_X, Math::AXIS_Z, Math::AXIS_Y };
 
-	for (int i = 0; i < _countof(axes); i++)
+	// For each axis
+	for (std::size_t i = 0; i < std::size(axes); i++)
 	{
 		while (delta[axes[i]] != 0)
 		{
-			float sign = glm::sign(delta[axes[i]]);
-			float edge = position_[axes[i]] + sign * size_[axes[i]] / 2.0f;
+			float sign = glm::sign(delta[axes[i]]); // direction
+			float edge = position_[axes[i]] + sign * size_[axes[i]] / 2.0f; // entity edge offset
 
-			float distToNext = Math::DistToBlock(edge, Math::Axis(axes[i]), sign == -1.0f);
-			float offset = sign * glm::min(distToNext, glm::abs(delta[axes[i]]));
+			float distToNext = Math::DistToBlock(edge, Math::Axis(axes[i]), sign == -1.0f); // distance to next block
+			float offset = sign * glm::min(distToNext, glm::abs(delta[axes[i]])); // distance to move
 
 			glm::vec3 targetPos = position_;
 			targetPos[axes[i]] += offset;
 
+			// Check for collisions in the target location
 			std::vector<ChunkManager::BlockInfo> collisions = ChunkManager::Instance().GetBlocksInVolume(targetPos, size_);
 
 			if (collisions.size() == 0)
 			{
+				// No collision, take axis movement
 				position_ = targetPos;
 				delta[axes[i]] -= offset;
 			}
 			else
 			{
+				// Collision, stop moving on axis
 				OnCollision(std::make_pair(collisions, Math::AxisToDir(Math::Axis(axes[i]), sign == -1.f)));
 				break;
 			}

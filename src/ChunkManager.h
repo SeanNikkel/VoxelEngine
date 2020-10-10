@@ -11,9 +11,11 @@
 #include "Shader.h"
 #include "Texture.h"
 
+// Loads, unloads, and draws chunks
 class ChunkManager
 {
 public:
+	// Singleton pattern
 	static ChunkManager &Instance()
 	{
 		static ChunkManager instance;
@@ -22,6 +24,7 @@ public:
 
 	typedef std::pair<glm::ivec3, Block> BlockInfo;
 
+	// Raycast data
 	struct RaycastResult
 	{
 		bool hit;
@@ -30,12 +33,15 @@ public:
 		Math::Direction normal;
 	};
 
+	// Update operations
 	void UpdateChunks(glm::vec3 playerPos, float dt);
 	void DrawChunks(const glm::mat4 &cameraMatrix);
 
+	// World block getters/setters
 	void SetBlock(glm::ivec3 pos, const Block &block);
 	const Block &GetBlock(glm::ivec3 pos);
 
+	// Utility functions
 	std::vector<BlockInfo> GetBlocksInVolume(glm::vec3 pos, glm::vec3 size);
 	RaycastResult Raycast(glm::vec3 pos, glm::vec3 dir, float length = INFINITY);
 
@@ -49,16 +55,18 @@ private:
 
 	ChunkManager();
 	~ChunkManager();
-	Chunk *AddChunk(glm::ivec2 coord);
-	bool ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos);
-	int BuiltNeighborCount(glm::ivec2 coord);
-	int BuiltNeighborCount(glm::ivec2 coord, glm::ivec2 exclude);
-	Chunk *GetChunk(glm::ivec3 pos);
+	Chunk *AddChunk(glm::ivec2 coord); // adds completed chunk to buffer, generates surrounding chunks
+	bool ChunkInRange(glm::vec3 playerPos, glm::vec3 chunkPos) const; // if chunk should stay loaded
+	int BuiltNeighborCount(glm::ivec2 coord) const; // how many surrounding chunks' meshes are built
+	int BuiltNeighborCount(glm::ivec2 coord, glm::ivec2 exclude) const;
+	Chunk *GetChunk(glm::ivec3 pos); // Chunk getters
+	const Chunk *GetChunk(glm::ivec3 pos) const;
 	Chunk *GetChunk(glm::ivec2 chunkCoord);
-	glm::ivec2 ToRelativePosition(glm::ivec3 pos) const;
-	glm::ivec2 ToChunkPosition(glm::ivec3 pos) const;
+	const Chunk *GetChunk(glm::ivec2 chunkCoord) const;
+	glm::ivec2 ToRelativePosition(glm::ivec3 pos) const; // Convert block coord to local coord
+	glm::ivec2 ToChunkPosition(glm::ivec3 pos) const; // Convert world coord to chunk coord
 
-public:
+public: // Remove functions for singleton
 	ChunkManager(ChunkManager const &) = delete;
 	void operator=(ChunkManager const &) = delete;
 };

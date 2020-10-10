@@ -10,6 +10,8 @@ Math::Direction Math::VectorToDir(glm::vec3 vec)
 {
 	float max = vec[0];
 	int axis = 0;
+
+	// Get largest axis
 	for (int i = 1; i < AXIS_COUNT; i++)
 	{
 		float val = glm::abs(vec[i]);
@@ -29,7 +31,7 @@ glm::vec3 Math::CornerToVec(Corner corner, Direction normal)
 
 float Math::PositiveMod(float val, float mod)
 {
-	val = fmodf(val, mod);
+	val = std::fmodf(val, mod);
 
 	if (val < 0)
 		val += mod;
