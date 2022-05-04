@@ -29,6 +29,9 @@ public:
 	// Maximize this window
 	void Maximize();
 
+	// Set rendering target to window
+	void SetFramebuffer();
+
 	~WindowManager();
 
 private:

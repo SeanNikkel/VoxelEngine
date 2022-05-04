@@ -1,5 +1,6 @@
 #include "WindowManager.h"
 #include "InputManager.h"
+#include "../shaders/Shared.h"
 
 #include <glad/glad.h>
 #include <string>
@@ -8,8 +9,8 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1280, 
 {
 	// Initialize GLFW
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create a window
@@ -36,13 +37,14 @@ WindowManager::WindowManager() : window_(nullptr), resolution_(glm::ivec2(1280, 
 	glViewport(0, 0, resolution_.x, resolution_.y);
 
 	// Set background color
-	SetClearColor({ 0.4f, 0.7f, 1.0f }); // sky
+	SetClearColor({ FOG_COLOR }); // sky
 
 	// Z-buffer testing
 	glEnable(GL_DEPTH_TEST);
 
 	// Backface culling
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Hide and capture cursor
 	glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -85,13 +87,20 @@ glm::vec3 WindowManager::GetClearColor() const
 void WindowManager::SetClearColor(glm::vec3 color)
 {
 	clearColor_ = color;
-	glClearColor(color.r, color.g, color.b, 1.0f);
+	glClearColor(clearColor_.x, clearColor_.y, clearColor_.z, 1.0f);
 }
 
 void WindowManager::Maximize()
 {
 	glfwMaximizeWindow(window_);
 	glfwPollEvents(); // prevents jolt
+}
+
+void WindowManager::SetFramebuffer()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, resolution_.x, resolution_.y);
+	glClearColor(clearColor_.x, clearColor_.y, clearColor_.z, 1.0f);
 }
 
 WindowManager::~WindowManager()

@@ -77,7 +77,7 @@ std::vector<glm::ivec2> TerrainGenerator::GenerateTreePoints(glm::ivec2 startCor
 		for (int x = startCorner.x; x < endCorner.x; x++)
 		{
 			glm::ivec2 pos = { x, z };
-			std::default_random_engine rng(hash(pos));
+			std::default_random_engine rng(unsigned(hash(pos)));
 
 			// Generate tree if using coord as seed passes
 			if (dist(rng) <= Gen::treeDensity)

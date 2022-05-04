@@ -1,7 +1,9 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Camera.h"
-
+#include "../shaders/Shared.h"
+#include "Skybox.h"
+#include "Crosshair.h"
 
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
@@ -14,8 +16,13 @@
 #include "Player.h"
 #include "InputManager.h"
 #include "WindowManager.h"
+#include "CascadedShadowMap.h"
 
+#ifdef _DEBUG
 int main()
+#else
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+#endif
 {
 	// Create game systems
 	WindowManager &windowManager = WindowManager::Instance();
@@ -23,6 +30,9 @@ int main()
 	ChunkManager &chunkManager = ChunkManager::Instance();
 	InputManager &inputManager = InputManager::Instance();
 	Player player;
+	CascadedShadowMap shadows({ { 2048, 0.025f }, { 2048, 0.125f }, { 2048, 1.0f } });
+	Skybox skybox;
+	Crosshair crosshair;
 
 	// Render loop
 	while (!glfwWindowShouldClose(windowManager.GetWindow()))
@@ -41,9 +51,15 @@ int main()
 		inputManager.Update();
 
 		// Draw
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		chunkManager.DrawChunks(player.GetCamera().GetPerspectiveMatrix(windowManager.GetResolution()) * player.GetCamera().GetViewMatrix());
-		glfwSwapBuffers(windowManager.GetWindow());
+
+		const Camera &cam = player.GetCamera();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);				// Clear
+		shadows.Render(cam.GetMatrix());								// Render all the chunks to cascaded shadow maps
+		skybox.Render(cam.GetViewMatrix(), cam.GetProjectionMatrix());	// Render the skybox
+		chunkManager.DrawChunksLit(cam, shadows.GetShaderInfo());	// Render all the chunks to the screen
+		if (!player.GetNoclip())
+			crosshair.Render(glm::vec2(1.f, cam.GetAspect()) / 400.f);	// Render the crosshair if walking
+		glfwSwapBuffers(windowManager.GetWindow());						// Present frame to screen
 	}
 
 	return 0;

@@ -7,7 +7,7 @@ namespace World
 	const float renderDistance = 64.0f; // block render radius
 	const unsigned renderSpeed = 1; // chunks generated per frame
 #else
-	const float renderDistance = 600.0f; // block render radius
+	const float renderDistance = 400.0f; // block render radius
 	const unsigned renderSpeed = 2; // chunks generated per frame
 #endif
 

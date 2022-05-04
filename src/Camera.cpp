@@ -37,26 +37,33 @@ float Camera::GetFarPlane() const
 	return farPlane_;
 }
 
+float Camera::GetAspect() const
+{
+	return aspect_;
+}
+
 glm::mat4 Camera::GetViewMatrix() const
 {
 	return glm::lookAt(pos_, pos_ + GetForward(), GetUp());
 }
 
-glm::mat4 Camera::GetPerspectiveMatrix(glm::vec2 screenSize) const
+glm::mat4 Camera::GetProjectionMatrix() const
 {
-	if (screenSize.x <= 0 || screenSize.y <= 0)
-		return glm::mat4();
+	return glm::perspective(glm::radians(fov_), aspect_, nearPlane_, farPlane_);
+}
 
-	return glm::perspective(glm::radians(fov_), screenSize.x / screenSize.y, nearPlane_, farPlane_);
+glm::mat4 Camera::GetMatrix() const
+{
+	return GetProjectionMatrix() * GetViewMatrix();
 }
 
 glm::vec3 Camera::GetForward() const
 {
 	// Spherical coordinates
 	return glm::normalize(glm::vec3(
-		cos(pitch_) * sin(yaw_),
+		-cos(pitch_) * sin(yaw_),
 		sin(pitch_),
-		cos(pitch_) * cos(yaw_)
+		-cos(pitch_) * cos(yaw_)
 	));
 }
 
@@ -65,9 +72,9 @@ glm::vec3 Camera::GetRight() const
 	float angle = yaw_ - glm::half_pi<float>();
 
 	return glm::vec3(
-		sin(angle),
+		-sin(angle),
 		0,
-		cos(angle)
+		-cos(angle)
 	);
 }
 
@@ -79,9 +86,9 @@ glm::vec3 Camera::GetUp() const
 glm::vec3 Camera::GetForwardAligned() const
 {
 	return glm::vec3(
-		sin(yaw_),
+		-sin(yaw_),
 		0,
-		cos(yaw_)
+		-cos(yaw_)
 	);
 }
 
@@ -133,4 +140,9 @@ void Camera::SetNearPlane(float nearPlane)
 void Camera::SetFarPlane(float farPlane)
 {
 	 farPlane_ = glm::clamp(farPlane, 0.0f, INFINITY);
+}
+
+void Camera::SetAspect(float aspect)
+{
+	aspect_ = aspect;
 }

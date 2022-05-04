@@ -13,9 +13,7 @@ ChunkManager::ChunkManager() : shader_("shaders/shader.vert", "shaders/shader.fr
 {
 	// Default uniform variables
 	shader_.SetVar("tex", 0);
-	shader_.SetVar("fogMin", World::renderDistance * 0.25f);
-	shader_.SetVar("fogMax", World::renderDistance * 1.5f);
-	shader_.SetVar("fogColor", WindowManager::Instance().GetClearColor());
+	shader_.SetVar("fogAmount", 0.7f / World::renderDistance);
 }
 
 ChunkManager::~ChunkManager()
@@ -172,21 +170,42 @@ void ChunkManager::UpdateChunks(glm::vec3 playerPos, float dt)
 	}
 }
 
-void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix)
+void ChunkManager::DrawChunksLit(const Camera &camera, const std::vector<CascadeShaderInfo> &cascadeInfo)
 {
 	shader_.Use();
+	texture_.Activate(GL_TEXTURE0);
 
 	// Calculate camera frustum
-	Math::Frustum camera = Math::CalculateFrustum(cameraMatrix);
+	glm::mat4 cameraMatrix = camera.GetMatrix();
 
+	// Camera uniforms
+	shader_.SetVar("cameraPosition", camera.GetPosition());
+	shader_.SetVar("nearPlane", camera.GetNearPlane());
+	shader_.SetVar("farPlane", camera.GetFarPlane());
+
+	// Upload cascade data
+	for (size_t i = 0; i < cascadeInfo.size(); i++)
+	{
+		shader_.SetVar(("cascadeTransforms[" + std::to_string(i) + "]").c_str(), cascadeInfo[i].transform);
+		shader_.SetVar(("cascadeDepths[" + std::to_string(i) + "]").c_str(), cascadeInfo[i].depth);
+		shader_.SetVar(("cascades[" + std::to_string(i) + "]").c_str(), int(i + 1));
+		cascadeInfo[i].tex->Activate(GLenum(GL_TEXTURE0 + i + 1));
+	}
+	DrawChunks(cameraMatrix, shader_);
+}
+
+void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix, const Shader &shader)
+{
+	shader.SetVar("cameraMatrix", cameraMatrix);
+
+	Math::Frustum cameraFrustum = Math::CalculateFrustum(cameraMatrix);
 	for (const auto &c : chunks_)
 	{
 		// Frustum culling
-		if (c.second->IsVisible(camera))
+		if (c.second->IsVisible(cameraFrustum))
 		{
 			// Set shader/texture
-			shader_.SetVar("MVP", glm::translate(cameraMatrix, c.second->GetRenderPos()));
-			texture_.Activate(GL_TEXTURE0);
+			shader.SetVar("modelMatrix", glm::translate(glm::mat4(1.0f), c.second->GetRenderPos()));
 
 			c.second->Draw();
 		}

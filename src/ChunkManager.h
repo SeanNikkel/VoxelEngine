@@ -10,6 +10,8 @@
 #include "Chunk.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Camera.h"
+#include "CascadedShadowMap.h"
 
 // Loads, unloads, and draws chunks
 class ChunkManager
@@ -33,9 +35,14 @@ public:
 		Math::Direction normal;
 	};
 
-	// Update operations
+	// Load and unload chunks for this frame
 	void UpdateChunks(glm::vec3 playerPos, float dt);
-	void DrawChunks(const glm::mat4 &cameraMatrix);
+
+	// Draw all chunks with lighting calculations
+	void DrawChunksLit(const Camera &camera, const std::vector<CascadeShaderInfo> &cascadeInfo);
+
+	// Draw chunks with given shader and camera
+	void DrawChunks(const glm::mat4 &cameraMatrix, const Shader &shader);
 
 	// World block getters/setters
 	void SetBlock(glm::ivec3 pos, const Block &block);

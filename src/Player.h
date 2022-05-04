@@ -13,6 +13,8 @@ public:
 	// Gets the player camera
 	const Camera &GetCamera() const;
 
+	bool GetNoclip() const;
+
 	// On collision override
 	virtual void OnCollision(std::pair<std::vector<ChunkManager::BlockInfo>, Math::Direction> collision) override;
 

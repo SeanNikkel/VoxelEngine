@@ -68,7 +68,7 @@ void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale,
 	if (vertices_.capacity() == 0)
 	{
 		vertices_.reserve(reserveAmount_);
-		indices_.reserve(unsigned(reserveAmount_ * 1.5f));
+		indices_.reserve(reserveAmount_ * 3 / 2);
 	}
 
 	// Insert base quad
@@ -76,9 +76,9 @@ void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale,
 	onCpu_ = true;
 	
 	// Transform quad data by parameters given
-	for (unsigned i = 0; i < Math::CORNER_COUNT; i++)
+	for (size_t i = 0; i < Math::CORNER_COUNT; i++)
 	{
-		unsigned current = vertices_.size() - (Math::CORNER_COUNT - i);
+		size_t current = vertices_.size() - (Math::CORNER_COUNT - i);
 		vertices_[current].position += offset;
 
 		vertices_[current].uv *= uvScale;
@@ -115,7 +115,14 @@ void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale,
 		indices_.end() - std::size(quadIndices),
 		[last](unsigned current) { return current + last; }
 	);
-	indexCount_ += std::size(quadIndices);
+	indexCount_ += GLsizei(std::size(quadIndices));
+}
+
+void Mesh::SetVertices(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices)
+{
+	vertices_ = vertices;
+	indices_ = indices;
+	indexCount_ = GLsizei(indices_.size());
 }
 
 void Mesh::Clear()

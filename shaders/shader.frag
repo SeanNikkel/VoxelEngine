@@ -1,30 +1,116 @@
-#version 330 core
-
 out vec4 fragColor;
 
 in vec2 texCoord;
 in vec3 normal;
-in float ambient;
+in float ambientV;
+in vec3 worldPosition;
 
+// Diffuse texture
 uniform sampler2D tex;
-uniform float fogMin;
-uniform float fogMax;
-uniform vec3 fogColor;
+
+// Camera info
+uniform float nearPlane;
+uniform float farPlane;
+uniform float fogAmount;
+uniform vec3 cameraPosition;
+
+// Cascade info
+uniform sampler2D cascades[MAX_CASCADES];
+uniform float cascadeDepths[MAX_CASCADES];
+uniform mat4 cascadeTransforms[MAX_CASCADES];
+
+// Nonlinear [0, 1] depth to linear [0,1] depth
+float ToLinear(float depth)
+{
+	return nearPlane * depth / (farPlane + depth * (nearPlane - farPlane));
+}
+
+// Linear [0, 1] depth to nonlinear [0,1] depth
+float FromLinear(float depth)
+{
+	return farPlane * depth / (nearPlane - depth * (nearPlane - farPlane));
+}
+
+// Calculate shadowing factor
+float ShadowFactor()
+{
+	float depth = gl_FragCoord.z;
+	float linearDepth = ToLinear(depth);
+
+	// Determine cascade to use based on depth
+	int cascade;
+	for (int i = 0; i < MAX_CASCADES; i++)
+	{
+		if (linearDepth <= cascadeDepths[i])
+		{
+			cascade = i;
+			break;
+		}
+	}
+
+	// Calculate fragment position in light space of cascade given
+	vec4 lightSpace = cascadeTransforms[cascade] * vec4(worldPosition, 1.0);
+	lightSpace /= lightSpace.w;
+	lightSpace = lightSpace * 0.5 + 0.5;
+
+	// Shadow bias based on normal
+	float bias = 0.005 * max((1.0 - dot(normal, vec3(LIGHT_DIR))), 0.1) / FromLinear(cascadeDepths[cascade]);
+
+	// PCF
+	float shadow = 0.0;
+	vec2 texelSize = 1.0 / vec2(textureSize(cascades[cascade], 0));
+	for (int x = -1; x <= 1; x++)
+	{
+		for (int y = -1; y <= 1; y++)
+		{
+			// Do shadow inequality for x and y
+			float shadowDepth = texture(cascades[cascade], vec2(lightSpace.xy + vec2(x, y) * texelSize)).r; 
+			shadow += lightSpace.z - bias < shadowDepth ? 1.0 : 0.0;
+		}
+	}
+
+	return shadow / 9.0;
+}
 
 void main()
 {
-	vec4 texCol = texture(tex, texCoord);
+	// Texture color
+	vec3 texColor = texture(tex, texCoord).rgb;
+
+	// View vector
+	vec3 view = worldPosition - cameraPosition;
+	float viewDist = length(view);
+	view /= viewDist;
 
 	// Directional diffuse
-	float sun = max(0.5, dot(normal, vec3(-0.8, 1.0, -0.6)));
+	float diffuse = max(0.0, dot(normal, vec3(LIGHT_DIR)));
+
+	// Shadow amount
+	float shadowFactor = ShadowFactor();
+
+	// Specular highlight
+	float specular = 0.1 * pow(max(0.0, dot(reflect(view, normal), vec3(LIGHT_DIR))), 1.0);
+
+	// Ambient lighting
+	vec3 ambient = vec3(FOG_COLOR) * texColor * 0.7;
 
 	// Ambient occlusion light value
-	float ambient = (ambient + 1.0) / 4.0;
+	float ambientOcclusion = (ambientV + 1.0) / 4.0;
 
-	// Fog amount
-	float fog = clamp(((gl_FragCoord.z / gl_FragCoord.w) - fogMin) / (fogMax - fogMin), 0.0, 1.0);
+	// Fog (from https://iquilezles.org/articles/fog/)
+	float falloff = 0.02;
+	float fogAmount = 0.5 * exp(-cameraPosition.y * falloff) * (1.0 - exp(-viewDist * view.y * falloff)) / view.y;
+	fogAmount = clamp(fogAmount, 0.0, 1.0);
+	vec3 fogColor = mix(vec3(FOG_COLOR), vec3(1.0, 0.9, 0.7), 0.5 * pow(max(0.0, dot(view, vec3(LIGHT_DIR))), 2.0));
+
+	// Lighting calculation
+    vec3 color = vec3(
+		vec3(SUN_COLOR) * texColor * diffuse * shadowFactor +	// diffuse
+		vec3(SUN_COLOR) * specular * shadowFactor +				// sepcular
+		ambient * ambientOcclusion								//ambient
+		);
+	color = mix(color, fogColor, fogAmount); // apply fog
 
 	// Output fragment
-    fragColor = vec4(texCol.rgb * sun * ambient, texCol.a);
-	fragColor = mix(fragColor, vec4(fogColor, 1.0), fog); // apply fog
+	fragColor = vec4(color, 1.0);
 } 

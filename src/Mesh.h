@@ -31,6 +31,9 @@ public:
 		unsigned char ambients[] = nullptr
 	);
 
+	// Set mesh data
+	void SetVertices(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices);
+
 	// Clear all vertices
 	void Clear();
 
@@ -55,8 +58,8 @@ private:
 	GLuint ebo_;
 	std::vector<Vertex> vertices_;
 	std::vector<GLuint> indices_;
-	unsigned indexCount_;
-	unsigned reserveAmount_;
+	GLsizei indexCount_;
+	size_t reserveAmount_;
 
 	bool onCpu_ = true;
 

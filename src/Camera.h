@@ -17,10 +17,12 @@ public:
 	float GetYaw() const;
 	float GetNearPlane() const;
 	float GetFarPlane() const;
+	float GetAspect() const;
 
 	// Matrix getters
 	glm::mat4 GetViewMatrix() const;
-	glm::mat4 GetPerspectiveMatrix(glm::vec2 screenSize) const;
+	glm::mat4 GetProjectionMatrix() const;
+	glm::mat4 GetMatrix() const;
 
 	// Vector getters
 	glm::vec3 GetForward() const;
@@ -41,6 +43,7 @@ public:
 	void SetYaw(float yaw);
 	void SetNearPlane(float nearPlane);
 	void SetFarPlane(float farPlane);
+	void SetAspect(float aspect);
 
 private:
 	glm::vec3 pos_;
@@ -49,4 +52,5 @@ private:
 	float yaw_ = 0;
 	float nearPlane_ = 0.1f;
 	float farPlane_ = 2000.0f;
+	float aspect_ = 16.0f / 9.0f;
 };

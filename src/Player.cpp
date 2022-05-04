@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "ChunkManager.h"
 #include "InputManager.h"
+#include "WindowManager.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -10,6 +11,7 @@
 
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
+	camera_.SetFarPlane(World::renderDistance * 1.25f);
 	// Hardcoded starting coords
 	Teleport(glm::vec3(520.5f, 102.0f, -320.5f));
 }
@@ -132,11 +134,17 @@ void Player::Update(float dt)
 
 	// Update camera
 	camera_.SetPosition(GetPosition() + glm::vec3(0.0f, GetSize().y * 0.4f, 0.0f));
+	camera_.SetAspect(WindowManager::Instance().GetResolution().x / float(WindowManager::Instance().GetResolution().y));
 }
 
 const Camera &Player::GetCamera() const
 {
 	return camera_;
+}
+
+bool Player::GetNoclip() const
+{
+	return noclip_;
 }
 
 void Player::OnCollision(std::pair<std::vector<ChunkManager::BlockInfo>, Math::Direction> collision)
