@@ -1,4 +1,4 @@
 # Voxel Engine
-![Screenshot](/VoxelScreenshot.png)
+![Screenshot](/VoxelScreenshot.jpg)
 ## Demo Video
-https://www.youtube.com/watch?v=t53iOFISXGs
+https://youtu.be/VUxtb5kTRkY
