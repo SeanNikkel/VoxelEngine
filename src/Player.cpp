@@ -2,6 +2,7 @@
 #include "ChunkManager.h"
 #include "InputManager.h"
 #include "WindowManager.h"
+#include "WorldConstants.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -12,6 +13,7 @@
 Player::Player() : Entity(), camera_(GetPosition()), canJump_(false), noclip_(false)
 {
 	camera_.SetFarPlane(World::renderDistance * 1.25f);
+
 	// Hardcoded starting coords
 	Teleport(glm::vec3(520.5f, 102.0f, -320.5f));
 }
@@ -64,13 +66,13 @@ void Player::Update(float dt)
 			glm::ivec3 pos = raycast.block.first;
 
 			if (destroying)
-				chunk.SetBlock(pos, { Block::BLOCK_AIR }); // Set to air if destroying
+				chunk.SetBlock(pos, { Block::BLOCK_AIR }, true); // Set to air if destroying
 			if (placing)
 			{
 				pos += glm::ivec3(Math::directionVectors[raycast.normal]);
 
 				if (!Math::AABBCollision(GetPosition(), GetSize(), glm::vec3(pos) + glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)))
-					chunk.SetBlock(pos, { Block::BLOCK_DIRT }); // Set to dirt if placing and not overlapping player
+					chunk.SetBlock(pos, { Block::BLOCK_DIRT }, true); // Set to dirt if placing and not overlapping player
 			}
 		}
 	}
@@ -142,12 +144,7 @@ const Camera &Player::GetCamera() const
 	return camera_;
 }
 
-bool Player::GetNoclip() const
-{
-	return noclip_;
-}
-
-void Player::OnCollision(std::pair<std::vector<ChunkManager::BlockInfo>, Math::Direction> collision)
+void Player::OnCollision(std::pair<std::vector<BlockInfo>, Math::Direction> collision)
 {
 	if (collision.second == Math::DIRECTION_DOWN)
  		canJump_ = true;

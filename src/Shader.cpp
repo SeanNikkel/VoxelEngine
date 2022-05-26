@@ -7,13 +7,11 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLcha
 	// Create the vertex shader
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	std::string vertexShaderCode = GetShaderCode(vertexPath);
-	printf("Compiling shader: %s\n", vertexPath);
 	CompileShader(vertexShader, vertexShaderCode.c_str());
 
 	// Create the fragment shader
 	std::string fragmentShaderCode = GetShaderCode(fragmentPath);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	printf("Compiling shader: %s\n", fragmentPath);
 	CompileShader(fragmentShader, fragmentShaderCode.c_str());
 
 	// Create the geometry shader if present
@@ -22,7 +20,6 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLcha
 	{
 		std::string geometryShaderCode = GetShaderCode(geometryPath);
 		geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
-		printf("Compiling shader: %s\n", geometryPath);
 		CompileShader(geometryShader, geometryShaderCode.c_str());
 	}
 
@@ -91,7 +88,6 @@ GLuint Shader::LinkShaders(const std::vector<GLuint> &shaders)
 	for (GLuint i : shaders)
 		glAttachShader(program, i);
 
-	printf("Linking program\n");
 	glLinkProgram(program);
 
 	// Check linking

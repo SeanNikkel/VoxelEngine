@@ -57,20 +57,88 @@ const Vertex Mesh::quads[Math::DIRECTION_COUNT][Math::CORNER_COUNT] =
 // Indices for above vertices
 const unsigned Mesh::quadIndices[] = { 0, 1, 2, 2, 1, 3 };
 
-Mesh::Mesh(unsigned reserve) : reserveAmount_(reserve)
+Mesh::Mesh(size_t reserve)
+{
+	SetupObjects(reserve);
+}
+
+Mesh::Mesh(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices)
 {
 	SetupObjects();
+	SetVertices(vertices, indices);
+}
+
+Mesh Mesh::CreateQuad(float size)
+{
+	return Mesh(
+        {
+            { size * glm::vec3(-0.5f, -0.5f, 0.0f) },
+            { size * glm::vec3( 0.5f, -0.5f, 0.0f) },
+            { size * glm::vec3(-0.5f,  0.5f, 0.0f) },
+            { size * glm::vec3( 0.5f,  0.5f, 0.0f) },
+        },
+        { 0, 1, 2, 3, 2, 1 }
+    );
+}
+
+Mesh Mesh::CreateCube(float size)
+{
+	return Mesh(
+		{
+			// Left face
+			{ size * glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f) },
+
+			// Right face															   		  
+			{ size * glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f) },
+
+			// Bottom face															   		  
+			{ size * glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f) },
+
+			// Top face															   		  
+			{ size * glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f) },
+
+			// Front face															   		  
+			{ size * glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 1.0f), glm::vec3( 0.0f,  0.0f, -1.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3( 0.0f,  0.0f, -1.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 1.0f), glm::vec3( 0.0f,  0.0f, -1.0f) },
+
+			// Back face															   		  
+			{ size * glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f) },
+			{ size * glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f) },
+			{ size * glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f) },
+			{ size * glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f) },
+			{ size * glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f) },
+		},
+		{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35 }
+	);
 }
 
 void Mesh::AddQuad(Math::Direction orientation, glm::vec3 offset, float uvScale, glm::vec2 uvOffset, unsigned char ambients[])
 {
-	// Reserve for performance
-	if (vertices_.capacity() == 0)
-	{
-		vertices_.reserve(reserveAmount_);
-		indices_.reserve(reserveAmount_ * 3 / 2);
-	}
-
 	// Insert base quad
 	vertices_.insert(vertices_.end(), &quads[orientation][0], &quads[orientation][Math::CORNER_COUNT]);
 	onCpu_ = true;
@@ -164,8 +232,12 @@ Mesh::~Mesh()
 	glDeleteBuffers(1, &ebo_);
 }
 
-void Mesh::SetupObjects()
+void Mesh::SetupObjects(size_t reserve)
 {
+	// Reserve for performance
+	vertices_.reserve(reserve);
+	indices_.reserve(reserve * 3 / 2);
+
 	// VBO
 	glGenBuffers(1, &vbo_);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_);

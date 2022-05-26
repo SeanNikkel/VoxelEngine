@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "ChunkManager.h"
+#include "WorldConstants.h"
 
 Entity::Entity() : position_(glm::vec3(0.0f, 0.0f, 0.0f)), velocity_(glm::vec3(0.0f, 0.0f, 0.0f)), size_(glm::vec3(0.8f, 1.8f, 0.8f))
 {
@@ -47,7 +48,7 @@ void Entity::Move(glm::vec3 delta)
 			targetPos[axes[i]] += offset;
 
 			// Check for collisions in the target location
-			std::vector<ChunkManager::BlockInfo> collisions = ChunkManager::Instance().GetBlocksInVolume(targetPos, size_);
+			std::vector<BlockInfo> collisions = ChunkManager::Instance().GetBlocksInVolume(targetPos, size_);
 
 			if (collisions.size() == 0)
 			{
@@ -75,7 +76,7 @@ void Entity::SetVelocity(glm::vec3 vel)
 	velocity_ = vel;
 }
 
-void Entity::OnCollision(std::pair<std::vector<ChunkManager::BlockInfo>, Math::Direction> collision)
+void Entity::OnCollision(std::pair<std::vector<BlockInfo>, Math::Direction> collision)
 {
 	velocity_[collision.second / 2] = 0.0f;
 }

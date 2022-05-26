@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 // Textures for each side of a block
 struct SideTextureIndicies
 {
@@ -36,6 +38,8 @@ struct Block
 		return type == rhs.type;
 	}
 };
+
+typedef std::pair<glm::ivec3, Block> BlockInfo;
 
 // Block-texture data
 namespace BlockData

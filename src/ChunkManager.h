@@ -3,15 +3,18 @@
 #include <vector>
 #include <unordered_map>
 
-#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
 #include "Block.h"
-#include "Chunk.h"
-#include "Shader.h"
 #include "Texture.h"
-#include "Camera.h"
-#include "CascadedShadowMap.h"
+#include "Math.h"
+#include "TerrainGenerator.h"
+#include "Shader.h"
+
+class Chunk;
+class Camera;
+struct CascadeShaderInfo;
 
 // Loads, unloads, and draws chunks
 class ChunkManager
@@ -23,8 +26,6 @@ public:
 		static ChunkManager instance;
 		return instance;
 	}
-
-	typedef std::pair<glm::ivec3, Block> BlockInfo;
 
 	// Raycast data
 	struct RaycastResult
@@ -45,12 +46,15 @@ public:
 	void DrawChunks(const glm::mat4 &cameraMatrix, const Shader &shader);
 
 	// World block getters/setters
-	void SetBlock(glm::ivec3 pos, const Block &block);
+	void SetBlock(glm::ivec3 pos, const Block &block, bool network = false);
 	const Block &GetBlock(glm::ivec3 pos);
 
 	// Utility functions
 	std::vector<BlockInfo> GetBlocksInVolume(glm::vec3 pos, glm::vec3 size);
 	RaycastResult Raycast(glm::vec3 pos, glm::vec3 dir, float length = INFINITY);
+
+	// Rendering functions
+	Shader &GetShader();
 
 private:
 	typedef std::unordered_map<glm::ivec2, Chunk *> ChunkContainer;

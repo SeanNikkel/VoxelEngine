@@ -13,14 +13,24 @@ struct Vertex
 	glm::vec3 position;
 	glm::vec2 uv;
 	glm::vec3 normal;
-	GLubyte ambient;
+	GLubyte ambient = 3;
 };
 
 // Wrapper for graphics api mesh
 class Mesh
 {
 public:
-	Mesh(unsigned reserve = 0);
+	// Create empty mesh
+	Mesh(size_t reserve = 0);
+
+	// Create mesh with given data
+	Mesh(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices);
+
+	// Create a quad mesh at origin with size*size*0 dimensions
+	static Mesh CreateQuad(float size);
+
+	// Create a cube mesh at origin with size*size*size dimensions
+	static Mesh CreateCube(float size);
 
 	// Add a quad manually
 	void AddQuad(
@@ -59,9 +69,7 @@ private:
 	std::vector<Vertex> vertices_;
 	std::vector<GLuint> indices_;
 	GLsizei indexCount_;
-	size_t reserveAmount_;
-
 	bool onCpu_ = true;
 
-	void SetupObjects(); // Create initial gpu data
+	void SetupObjects(size_t reserve = 0); // Create initial gpu data
 };

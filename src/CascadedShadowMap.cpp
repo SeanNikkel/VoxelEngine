@@ -4,6 +4,7 @@
 #include "../shaders/Shared.h"
 
 #include <queue>
+#include <array>
 
 CascadedShadowMap::CascadedShadowMap(const std::vector<Cascade> &cascades) :
     cascades_(cascades),

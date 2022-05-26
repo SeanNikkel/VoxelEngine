@@ -1,8 +1,10 @@
 #pragma once
 
-#include "ChunkManager.h"
+#include "Math.h"
+#include "Block.h"
 
-#include <glm/glm.hpp>
+#include <utility>
+#include <vector>
 
 // Defines an object that can move in the world
 class Entity
@@ -22,7 +24,7 @@ public:
 
 	void SetVelocity(glm::vec3 vel);
 
-	virtual void OnCollision(std::pair<std::vector<ChunkManager::BlockInfo>, Math::Direction> collision);
+	virtual void OnCollision(std::pair<std::vector<BlockInfo>, Math::Direction> collision);
 
 private:
 	glm::vec3 position_;

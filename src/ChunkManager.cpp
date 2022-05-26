@@ -1,7 +1,10 @@
 #include "ChunkManager.h"
-#include "Math.h"
 #include "WorldConstants.h"
 #include "WindowManager.h"
+#include "NetworkManager.h"
+#include "Camera.h"
+#include "CascadedShadowMap.h"
+#include "Chunk.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -212,12 +215,15 @@ void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix, const Shader &shade
 	}
 }
 
-void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block)
+void ChunkManager::SetBlock(glm::ivec3 pos, const Block &block, bool network)
 {
 	Chunk *chunk = GetChunk(pos);
 	
 	if (chunk == nullptr || block == chunk->GetBlock(pos))
 		return;
+
+	if (network)
+		NetworkManager::Instance().RegisterBlockUpdate({ block.type, pos });
 
 	chunk->SetBlock(pos, block);
 
@@ -247,7 +253,7 @@ const Block &ChunkManager::GetBlock(glm::ivec3 pos)
 	return chunk->GetBlock(pos);
 }
 
-std::vector<ChunkManager::BlockInfo> ChunkManager::GetBlocksInVolume(glm::vec3 pos, glm::vec3 size)
+std::vector<BlockInfo> ChunkManager::GetBlocksInVolume(glm::vec3 pos, glm::vec3 size)
 {
 	std::vector<BlockInfo> result;
 
@@ -349,6 +355,11 @@ ChunkManager::RaycastResult ChunkManager::Raycast(glm::vec3 pos, glm::vec3 dir, 
 			return result;
 		}
 	}
+}
+
+Shader &ChunkManager::GetShader()
+{
+	return shader_;
 }
 
 Chunk *ChunkManager::GetChunk(glm::ivec3 pos)

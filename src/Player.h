@@ -8,15 +8,15 @@ class Player : public Entity
 {
 public:
 	Player();
+
+	// Handle input
 	void Update(float dt);
 
 	// Gets the player camera
 	const Camera &GetCamera() const;
 
-	bool GetNoclip() const;
-
 	// On collision override
-	virtual void OnCollision(std::pair<std::vector<ChunkManager::BlockInfo>, Math::Direction> collision) override;
+	virtual void OnCollision(std::pair<std::vector<BlockInfo>, Math::Direction> collision) override;
 
 private:
 	Camera camera_;
