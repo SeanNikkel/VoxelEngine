@@ -83,7 +83,12 @@ void NetworkManager::Render(Shader &shader)
 	for (const RemotePlayer &player : players_->GetPlayers())
 	{
 		// All other uniforms are already set when drawing chunks
-		shader.SetVar("modelMatrix", glm::translate(glm::mat4(1.0f), player.data.position) * glm::rotate(glm::mat4(1.0f), player.data.yaw, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), player.data.pitch, glm::vec3(1.0f, 0.0f, 0.0f)));
+		glm::mat4 model =
+			glm::translate(glm::mat4(1.0f), player.data.position) *
+			glm::rotate(glm::mat4(1.0f), player.data.yaw, glm::vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(glm::mat4(1.0f), player.data.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+		shader.SetVar("modelMatrix", model);
+		shader.SetVar("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
 
 		head_.Draw();
 	}

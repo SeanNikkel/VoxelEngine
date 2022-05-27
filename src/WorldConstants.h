@@ -3,7 +3,7 @@
 // Configurable world variables
 namespace World
 {
-#ifdef _DEBUG
+#ifndef NDEBUG
 	const float renderDistance = 64.0f; // block render radius
 	const unsigned renderSpeed = 1; // chunks generated per frame
 #else

@@ -68,8 +68,8 @@ void CascadedShadowMap::Render(const glm::mat4 &cameraMatrix)
             max = glm::max(max, v);
         }
 
-        // Create transformation for cascade
-        shaderInfo_.push_back({glm::ortho(min.x, max.x, min.y, max.y, -max.z - 100.0f, -min.z) * lightTransform, cascades_[i].depth, &framebuffers_[i].GetTexture()});
+        // Create transformation for cascade (offset zNear so it includes objects outside view frustum)
+        shaderInfo_.push_back({glm::ortho(min.x, max.x, min.y, max.y, -max.z - 400.0f, -min.z) * lightTransform, cascades_[i].depth, &framebuffers_[i].GetTexture()});
         
         // Render chunks using transformation
         framebuffers_[i].BindFramebuffer();

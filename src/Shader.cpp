@@ -150,6 +150,12 @@ void Shader::SetVar(const char *name, const glm::vec3 &value) const
 	glUniform3f(glGetUniformLocation(id_, name), value.x, value.y, value.z);
 }
 
+void Shader::SetVar(const char *name, const glm::mat3 &value) const
+{
+	Use();
+	glUniformMatrix3fv(glGetUniformLocation(id_, name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
 void Shader::SetVar(const char *name, const glm::mat4 &value) const
 {
 	Use();

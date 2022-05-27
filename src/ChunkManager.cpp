@@ -208,7 +208,9 @@ void ChunkManager::DrawChunks(const glm::mat4 &cameraMatrix, const Shader &shade
 		if (c.second->IsVisible(cameraFrustum))
 		{
 			// Set shader/texture
-			shader.SetVar("modelMatrix", glm::translate(glm::mat4(1.0f), c.second->GetRenderPos()));
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), c.second->GetRenderPos());
+			shader.SetVar("modelMatrix", model);
+			shader.SetVar("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
 
 			c.second->Draw();
 		}

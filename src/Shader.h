@@ -24,6 +24,7 @@ public:
 	void SetVar(const char *name, float value) const;
 	void SetVar(const char *name, const glm::vec2 &value) const;
 	void SetVar(const char *name, const glm::vec3 &value) const;
+	void SetVar(const char *name, const glm::mat3 &value) const;
 	void SetVar(const char *name, const glm::mat4 &value) const;
 
 private:

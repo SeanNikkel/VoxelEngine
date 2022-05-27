@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 }
 
 // Release has no console which makes it use WinMain
-#ifndef _DEBUG
+#ifdef NDEBUG
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	return main(__argc, __argv);

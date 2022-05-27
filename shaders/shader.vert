@@ -9,6 +9,7 @@ out float ambientV;
 out vec3 worldPosition;
 
 uniform mat4 modelMatrix;
+uniform mat3 normalMatrix;
 uniform mat4 cameraMatrix;
 
 void main()
@@ -20,6 +21,6 @@ void main()
 
 	// Forward variables to fragment shader
     texCoord = aTex;
-	normal = aNorm;
+	normal = normalMatrix * aNorm;
 	ambientV = aAmb;
 }

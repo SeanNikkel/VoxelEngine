@@ -31,6 +31,11 @@ float FromLinear(float depth)
 	return farPlane * depth / (nearPlane - depth * (nearPlane - farPlane));
 }
 
+float Luminance(vec3 color)
+{
+	return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+}
+
 // Calculate shadowing factor
 float ShadowFactor()
 {
@@ -74,6 +79,8 @@ float ShadowFactor()
 
 void main()
 {
+	vec3 N = normalize(normal);
+
 	// Texture color
 	vec3 texColor = texture(tex, texCoord).rgb;
 
@@ -83,13 +90,13 @@ void main()
 	view /= viewDist;
 
 	// Directional diffuse
-	float diffuse = max(0.0, dot(normal, vec3(LIGHT_DIR)));
+	float diffuse = max(0.0, dot(N, vec3(LIGHT_DIR)));
 
 	// Shadow amount
 	float shadowFactor = ShadowFactor();
 
 	// Specular highlight
-	float specular = 0.1 * pow(max(0.0, dot(reflect(view, normal), vec3(LIGHT_DIR))), 1.0);
+	float specular = 0.75 * pow(max(0.0, dot(reflect(view, N), vec3(LIGHT_DIR))), 1.0) * max(dot(N, vec3(LIGHT_DIR)), 0.0) * Luminance(texColor);
 
 	// Ambient lighting
 	vec3 ambient = vec3(FOG_COLOR) * texColor * 0.7;
