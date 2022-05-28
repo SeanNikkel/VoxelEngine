@@ -41,7 +41,7 @@ public:
 
 private:
 	std::unique_ptr<RemotePlayers> players_;
-	BlockUpdate blockUpdate_;
+	std::vector<BlockUpdate> blockUpdates_;
 	Mesh head_;
 	Texture headTexture_;
 

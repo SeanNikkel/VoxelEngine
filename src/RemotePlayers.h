@@ -7,14 +7,6 @@
 
 // These are sent over the network
 #pragma pack(push, 1)
-// Player head data
-struct PlayerData
-{
-    glm::vec3 position;
-    float pitch;
-    float yaw;
-};
-
 // Info to describe a block change
 struct BlockUpdate
 {
@@ -25,8 +17,9 @@ struct BlockUpdate
 // Sent by clients to host
 struct PlayerPacket
 {
-    PlayerData player;
-    BlockUpdate block;
+    glm::vec3 position;
+    float pitch;
+    float yaw;
 };
 
 // Sent by host to clients
@@ -37,31 +30,26 @@ struct IdentifiedPlayerPacket
 };
 #pragma pack(pop)
 
-// Describes all networked data for a player
-struct RemotePlayer
-{
-    PlayerData data;
-    std::vector<BlockUpdate> blockUpdates;
-};
-
 // Abstraction of host + client networking differences
 class RemotePlayers
 {
 public:
     // Send given packet and handle any new packets
-    virtual bool Update(const PlayerPacket &packet) = 0;
+    virtual bool Update(const PlayerPacket &packet, const std::vector<BlockUpdate> &blocks) = 0;
+
+    // Stop updating/drawing a player
+    virtual void RemovePlayer(size_t i);
 
     // Get the networked player data
-    virtual std::vector<RemotePlayer> GetPlayers() = 0;
+    const std::vector<PlayerPacket> &GetPlayers();
+    const std::vector<BlockUpdate> &GetBlockUpdates();
 
     virtual ~RemotePlayers() {};
 protected:
-    // Updates networked player data with a new packet
-    void UpdatePlayer(const IdentifiedPlayerPacket &packet);
-    
     void ClearBlockUpdates();
 
-    std::vector<RemotePlayer> players_;
+    std::vector<PlayerPacket> players_;
+    std::vector<BlockUpdate> updates_;
 };
 
 // Implementation of host communication for clients
@@ -69,11 +57,11 @@ class RemoteHost : public RemotePlayers
 {
 public:
     RemoteHost(const char *address, uint16_t port);
-    bool Update(const PlayerPacket &packet) override;
-    std::vector<RemotePlayer> GetPlayers() override;
+    bool Update(const PlayerPacket &packet, const std::vector<BlockUpdate> &blocks) override;
 
 private:
-    Socket host_;
+    TCPSocket tcp_;
+    UDPSocket udp_;
 };
 
 // Implementation of clients communication for host
@@ -81,10 +69,12 @@ class RemoteClients : public RemotePlayers
 {
 public:
     RemoteClients(uint16_t port);
-    bool Update(const PlayerPacket &packet) override;
-    std::vector<RemotePlayer> GetPlayers() override;
+    bool Update(const PlayerPacket &packet, const std::vector<BlockUpdate> &blocks) override;
+    void RemovePlayer(size_t i) override;
 
 private:
-    std::vector<Socket> clients_;
+    std::vector<TCPSocket> tcps_;
+    std::unordered_map<SocketAddress, size_t> addressMap_;
+    UDPSocket udp_;
     ListenSocket listen_;
 };

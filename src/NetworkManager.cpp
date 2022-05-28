@@ -12,7 +12,6 @@ NetworkManager::NetworkManager() : head_(Mesh::CreateCube(0.5f)), headTexture_("
 		assert(!"Error initializing WinSock!");
 }
 
-
 void NetworkManager::Start(const char *ip)
 {
 	std::string input = ip;
@@ -34,7 +33,7 @@ void NetworkManager::Start(const char *ip)
 
 void NetworkManager::RegisterBlockUpdate(const BlockUpdate &update)
 {
-	blockUpdate_ = update;
+	blockUpdates_.push_back(update);
 }
 
 void NetworkManager::Update(const Player &player)
@@ -44,31 +43,26 @@ void NetworkManager::Update(const Player &player)
 
 	// Prepare packet to send
 	PlayerPacket send;
-	send.block = blockUpdate_;
-	send.player.pitch = player.GetCamera().GetPitch();
-	send.player.yaw = player.GetCamera().GetYaw();
-	send.player.position = player.GetCamera().GetPosition();
-
-	// Reset block update
-	blockUpdate_ = BlockUpdate();
+	send.pitch = player.GetCamera().GetPitch();
+	send.yaw = player.GetCamera().GetYaw();
+	send.position = player.GetCamera().GetPosition();
 
 	// Send and receive packets
-	if (!players_->Update(send))
+	if (!players_->Update(send, blockUpdates_))
 	{
 		// If disconnected, remove players
 		players_.reset();
 		return;
 	}
 
-	// Handle all block updates
-	for (const RemotePlayer &player : players_->GetPlayers())
-	{
-		for (const BlockUpdate &update : player.blockUpdates)
-		{
-			ChunkManager::Instance().SetBlock(update.coords, { update.blockType });
-		}
-	}
+	// Reset block update
+	blockUpdates_.clear();
 
+	// Handle all block updates
+	for (const BlockUpdate &update : players_->GetBlockUpdates())
+	{
+		ChunkManager::Instance().SetBlock(update.coords, { update.blockType });
+	}
 }
 
 void NetworkManager::Render(Shader &shader)
@@ -80,13 +74,13 @@ void NetworkManager::Render(Shader &shader)
 	headTexture_.Activate(GL_TEXTURE0);
 
 	// Render each player
-	for (const RemotePlayer &player : players_->GetPlayers())
+	for (const PlayerPacket &player : players_->GetPlayers())
 	{
 		// All other uniforms are already set when drawing chunks
 		glm::mat4 model =
-			glm::translate(glm::mat4(1.0f), player.data.position) *
-			glm::rotate(glm::mat4(1.0f), player.data.yaw, glm::vec3(0.0f, 1.0f, 0.0f)) *
-			glm::rotate(glm::mat4(1.0f), player.data.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::translate(glm::mat4(1.0f), player.position) *
+			glm::rotate(glm::mat4(1.0f), player.yaw, glm::vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(glm::mat4(1.0f), player.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
 		shader.SetVar("modelMatrix", model);
 		shader.SetVar("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
 

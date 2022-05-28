@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
 	ChunkManager &chunkManager = ChunkManager::Instance();
 	InputManager &inputManager = InputManager::Instance();
 	NetworkManager &networkManager = NetworkManager::Instance();
-	networkManager.Start(argv[1]);
+	if (argc > 1)
+		networkManager.Start(argv[1]);
 	Player player;
 	CascadedShadowMap shadows({ { 2048, 0.025f }, { 2048, 0.125f }, { 2048, 1.0f } }); // Cascade resolution, z-depths
 	Skybox skybox;

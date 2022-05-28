@@ -1,20 +1,18 @@
 #include "RemotePlayers.h"
 
-RemoteHost::RemoteHost(const char *address, uint16_t port) : host_(address, port)
+RemoteHost::RemoteHost(const char *address, uint16_t port) : tcp_({ address, port }), udp_()
 {
 }
 
-bool RemoteHost::Update(const PlayerPacket &packet)
+bool RemoteHost::Update(const PlayerPacket &packet, const std::vector<BlockUpdate> &blocks)
 {
     ClearBlockUpdates();
 
-    // Receive packets
-
+    // Receive TCP packets
     for (;;)
     {
-        // Receive next packet
-        IdentifiedPlayerPacket pack;
-        int result = host_.Receive(&pack, sizeof(pack));
+        BlockUpdate bu;
+        int result = tcp_.Receive(&bu, sizeof(bu));
 
         if (result == 0)
             break;
@@ -22,125 +20,164 @@ bool RemoteHost::Update(const PlayerPacket &packet)
         if (result == -1)
             return false;
 
+        updates_.push_back(bu);
+    }
+
+    // Receive UDP packets
+    for (;;)
+    {
+        // Receive next packet
+        IdentifiedPlayerPacket pack;
+        int result = udp_.Receive(&pack, sizeof(pack));
+
+        if (result == 0)
+            break;
+
+        if (result == -1)
+            return false;
 
         if (pack.playerId >= players_.size())
             players_.resize(pack.playerId + 1); // Currently, clients won't see other clients disconnect
 
-        UpdatePlayer(pack);
+        players_[pack.playerId] = pack.packet;
     }
     // Send packets
-    host_.Send(&packet, sizeof(packet));
+    udp_.Send(tcp_.GetRemoteAddress(), &packet, int(sizeof(packet)));
+    tcp_.Send(blocks);
 
     return true;
 }
 
-std::vector<RemotePlayer> RemoteHost::GetPlayers()
-{
-    return players_;
-}
-
-RemoteClients::RemoteClients(uint16_t port) : listen_(port)
+RemoteClients::RemoteClients(uint16_t port) : udp_(port), listen_(port)
 {
 }
 
-bool RemoteClients::Update(const PlayerPacket &packet)
+bool RemoteClients::Update(const PlayerPacket &packet, const std::vector<BlockUpdate> &blocks)
 {
     ClearBlockUpdates();
 
     // Accept any new connections
     for (;;)
     {
-        std::optional<Socket> result = listen_.AcceptConnection();
+        std::optional<TCPSocket> result = listen_.AcceptConnection();
 
-        if (result.has_value())
-        {
-            clients_.push_back(std::move(*result));
-            players_.push_back({});
-        }
-        else
+        // No more connections
+        if (!result.has_value())
             break;
+
+        tcps_.push_back(std::move(*result));
+        players_.push_back({});
     }
 
-    // Get data from all clients
-    for (size_t i = 0; i < clients_.size(); /* i++ below */)
+    // Receive TCP packets
+    std::vector<std::vector<BlockUpdate>> updates(tcps_.size());
+    for (size_t i = 0; i < tcps_.size(); )
     {
         int result;
         for (;;)
         {
             // Receive next packet
-            IdentifiedPlayerPacket pack { uint8_t(i) };
-            result = clients_[i].Receive(&pack.packet, sizeof(pack.packet));
+            BlockUpdate bu;
+            result = tcps_[i].Receive(&bu, sizeof(bu));
 
-            if (result <= 0)
+            // No more data or disconnected
+            if (result == 0 || result == -1)
                 break;
-            
-            // Apply packet
-            UpdatePlayer(pack);
 
-            // Send this packet to all other clients
-            size_t id = i;
-            for (size_t j = 0; j < clients_.size(); j++)
-            {
-                // Continuous and consistent numbering for sending from i to j
-                // Table of values for id:
-                //            j =
-                //         | 0 1 2 ...
-                //       --+-------
-                //       0 | . 1 1
-                //  i =  1 | 1 . 2
-                //       2 | 2 2 .
-                //      ...
-
-                if (j == i)
-                {
-                    id++;
-                    continue;
-                }
-
-                pack.playerId = char(id);
-                clients_[j].Send(&pack, sizeof(pack));
-            }
+            // Add block update to list
+            updates[i].push_back(bu);
         }
 
-        // Remove socket if connection closed
         if (result == -1)
-        {
-            clients_.erase(clients_.begin() + i);
-            players_.erase(players_.begin() + i);
-        }
+            RemovePlayer(i); // Remove if disconnected
         else
             i++;
     }
 
-    // Send packets
-    IdentifiedPlayerPacket idPacket = { 0, packet };
-    for (Socket &client : clients_)
+    // Recieve packets
+    int result;
+    for (;;)
     {
-        client.Send(&idPacket, sizeof(idPacket));
+        // Receive next packet
+        PlayerPacket pack;
+        SocketAddress address;
+        result = udp_.Receive(&pack, sizeof(pack), address);
+
+        // No more packets
+        if (result <= 0)
+            break;
+            
+        // Create/lookup index
+        uint8_t index = uint8_t(addressMap_.insert(std::make_pair(address, addressMap_.size())).first->second);
+
+        // Apply packet
+        players_[index] = pack;
+    }
+
+    // Send packets
+    for (const auto &address : addressMap_)
+    {
+        // Send host data
+        IdentifiedPlayerPacket hostPacket = { 0, packet };
+        udp_.Send(address.first, &hostPacket, sizeof(hostPacket));
+
+        // Send other client's data
+        size_t id = 0;
+        for (size_t i = 0; i < players_.size(); i++)
+        {
+            // If data came from here
+            if (i == address.second)
+                continue;
+
+            IdentifiedPlayerPacket clientPacket = { uint8_t(++id), players_[i] };
+            udp_.Send(address.first, &clientPacket, sizeof(clientPacket));  // Players
+            tcps_[address.second].Send(updates[i]);                         // Blocks
+        }
+
+        tcps_[address.second].Send(blocks);
+    }
+
+    // Add all block updates into updates_
+    for (const std::vector<BlockUpdate> &update : updates)
+    {
+        updates_.insert(updates_.end(), update.begin(), update.end());
     }
 
     // Host can't disconnect
     return true;
 }
 
-std::vector<RemotePlayer> RemoteClients::GetPlayers()
+void RemoteClients::RemovePlayer(size_t i)
+{
+    RemotePlayers::RemovePlayer(i);
+
+    tcps_.erase(tcps_.begin() + i);
+
+    // Remove from address map
+    addressMap_.erase(std::find_if(addressMap_.begin(), addressMap_.end(), [i](const auto &pair) { return pair.second == i; }));
+    for (auto &address : addressMap_)
+    {
+        if (address.second > i)
+            address.second--;
+    }
+}
+
+void RemotePlayers::RemovePlayer(size_t i)
+{
+    players_.erase(players_.begin() + i);
+}
+
+const std::vector<PlayerPacket> &RemotePlayers::GetPlayers()
 {
     return players_;
 }
 
-void RemotePlayers::UpdatePlayer(const IdentifiedPlayerPacket &packet)
+const std::vector<BlockUpdate> &RemotePlayers::GetBlockUpdates()
 {
-    RemotePlayer &p = players_[packet.playerId];
-
-    p.data = packet.packet.player;
-
-    // Add block update to list if needed
-    if (packet.packet.block.blockType != Block::BlockType::BLOCK_ERROR)
-        p.blockUpdates.push_back(packet.packet.block);
+    return updates_;
 }
 
 void RemotePlayers::ClearBlockUpdates()
 {
-    for (RemotePlayer &player : players_)
-        player.blockUpdates.clear();
+    updates_.clear();
 }
