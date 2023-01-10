@@ -1,7 +1,7 @@
 #include "Crosshair.h"
 #include "../shaders/Shared.h"
 
-Crosshair::Crosshair() : shader_("shaders/Crosshair.vert", "shaders/Crosshair.frag")
+Crosshair::Crosshair() : shader_("shaders/crosshair.vert", "shaders/crosshair.frag")
 {
     // Rotated quad mesh
     cross_.SetVertices(

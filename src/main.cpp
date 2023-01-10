@@ -65,8 +65,8 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+#if _WIN32 && defined(NDEBUG)
 // Release has no console which makes it use WinMain
-#ifdef NDEBUG
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	return main(__argc, __argv);

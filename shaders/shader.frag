@@ -120,4 +120,4 @@ void main()
 
 	// Output fragment
 	fragColor = vec4(color, 1.0);
-} 
+}

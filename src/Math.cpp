@@ -31,7 +31,7 @@ glm::vec3 Math::CornerToVec(Corner corner, Direction normal)
 
 float Math::PositiveMod(float val, float mod)
 {
-	val = std::fmodf(val, mod);
+	val = std::fmod(val, mod);
 
 	if (val < 0)
 		val += mod;

@@ -2,7 +2,22 @@
 
 #include <iostream>
 #include <cassert>
+
+#if _WIN32
 #include <WS2tcpip.h>
+#define s_addr S_un.S_addr
+#else
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#define SD_BOTH SHUT_RDWR
+#define ioctlsocket ioctl
+#define closesocket close
+#define INVALID_SOCKET -1
+#define WSAGetLastError() errno
+#define WSAEWOULDBLOCK EWOULDBLOCK
+#define WSAECONNRESET ECONNRESET
+#endif
 
 SocketAddress::SocketAddress(const char *address, uint16_t port)
 {
@@ -13,7 +28,7 @@ SocketAddress::SocketAddress(uint16_t port)
 {
 	address_.sin_family = AF_INET;
 	address_.sin_port = htons(port);
-	address_.sin_addr.S_un.S_addr = INADDR_ANY;
+	address_.sin_addr.s_addr = INADDR_ANY;
 }
 
 void SocketAddress::Set(const char *address, uint16_t port)
@@ -53,14 +68,14 @@ TCPSocket::TCPSocket(const SocketAddress &address) : remoteAddress_(address)
 	std::cout << "Successfully connected to " << remoteAddress_ << " on TCP." << std::endl;
 
 	// Set to nonblocking
-	u_long val = 1;
+	unsigned long val = 1;
 	if (ioctlsocket(sock_, FIONBIO, &val))
 		assert(!"Error setting client socket to nonblocking.");
 }
 
 TCPSocket::TCPSocket(const SOCKET &sock)
 {
-#ifndef NDEBUG
+#if _WIN32 && !defined(NDEBUG)
 	// Check if socket is valid
 	CSADDR_INFO info;
 	int infoSize = sizeof(info);
@@ -70,12 +85,12 @@ TCPSocket::TCPSocket(const SOCKET &sock)
 
 	sock_ = sock;
 
-	int remoteAddressSize = sizeof(remoteAddress_);
+	socklen_t remoteAddressSize = sizeof(remoteAddress_);
 	getpeername(sock_, reinterpret_cast<sockaddr *>(&remoteAddress_), &remoteAddressSize);
 	std::cout << "Successfully connected to " << remoteAddress_ << " on TCP." << std::endl;
 
 	// Set to nonblocking
-	u_long val = 1;
+	unsigned long val = 1;
 	if (ioctlsocket(sock_, FIONBIO, &val))
 		assert(!"Error setting client socket to nonblocking.");
 }
@@ -164,7 +179,7 @@ UDPSocket::UDPSocket(uint16_t port) : port_(port)
 	// Get port if implementation defined
 	if (port_ == 0)
 	{
-		int addrSize = sizeof(addr);
+		socklen_t addrSize = sizeof(addr);
 		getsockname(sock_, reinterpret_cast<sockaddr *>(&addr), &addrSize);
 		port_ = addr.Port();
 	}
@@ -172,7 +187,7 @@ UDPSocket::UDPSocket(uint16_t port) : port_(port)
 	std::cout << "Opened UDP socket on port " << port_ << "." << std::endl;
 
 	// Set to nonblocking
-	u_long val = 1;
+	unsigned long val = 1;
 	if (ioctlsocket(sock_, FIONBIO, &val))
 		assert(!"Error setting client socket to nonblocking.");
 }
@@ -208,7 +223,7 @@ int UDPSocket::Receive(void *buffer, int size)
 int UDPSocket::Receive(void *buffer, int size, SocketAddress &address)
 {
 	// Get data from sockets
-	int addressSize = sizeof(address);
+	socklen_t addressSize = sizeof(address);
 	int result = recvfrom(sock_, reinterpret_cast<char *>(buffer), size, 0, reinterpret_cast<sockaddr *>(&address), &addressSize);
 
 	// Error
@@ -267,7 +282,7 @@ ListenSocket::ListenSocket(uint16_t port) : localAddress_(port)
 	std::cout << "Listening for TCP connections to port " << port << "..." << std::endl;
 
 	// Set to nonblocking
-	u_long val = 1;
+	unsigned long val = 1;
 	if (ioctlsocket(sock_, FIONBIO, &val))
 		assert(!"Error setting host socket to nonblocking.");
 }
@@ -275,7 +290,7 @@ ListenSocket::ListenSocket(uint16_t port) : localAddress_(port)
 std::optional<TCPSocket> ListenSocket::AcceptConnection()
 {
 	// Connect to client
-	int addrSize = sizeof(localAddress_);
+	socklen_t addrSize = sizeof(localAddress_);
 	SOCKET connectionSocket = accept(sock_, reinterpret_cast<sockaddr *>(&localAddress_), &addrSize);
 
 	if (connectionSocket == INVALID_SOCKET)
@@ -299,7 +314,7 @@ ListenSocket::~ListenSocket()
 
 std::ostream &operator<<(std::ostream &output, const SocketAddress &addr)
 {
-	const auto &ip = addr.address_.sin_addr.S_un.S_un_b;
-	std::cout << int(ip.s_b1) << "." << int(ip.s_b2) << "." << int(ip.s_b3) << "." << int(ip.s_b4) << ":" << ntohs(addr.address_.sin_port);
+	const auto ip = addr.address_.sin_addr.s_addr;
+	std::cout << int(ip & 0xff) << "." << int(ip>>8 & 0xff) << "." << int(ip>>16 & 0xff) << "." << int(ip>>24 & 0xff) << ":" << ntohs(addr.address_.sin_port);
 	return output;
 }
