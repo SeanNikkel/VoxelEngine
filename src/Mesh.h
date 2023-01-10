@@ -68,7 +68,7 @@ private:
 	GLuint ebo_;
 	std::vector<Vertex> vertices_;
 	std::vector<GLuint> indices_;
-	GLsizei indexCount_;
+	GLsizei indexCount_ = 0;
 	bool onCpu_ = true;
 
 	void SetupObjects(size_t reserve = 0); // Create initial gpu data

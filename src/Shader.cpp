@@ -2,6 +2,14 @@
 #include <fstream>
 #include <sstream>
 
+#if !_WIN32
+#ifdef __GNUC__
+#define __debugbreak() __builtin_trap()
+#else
+#define __debugbreak() (*(volatile int *)0 = 0)
+#endif
+#endif
+
 Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLchar *geometryPath)
 {
 	// Create the vertex shader

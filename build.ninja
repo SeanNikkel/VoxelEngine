@@ -1,0 +1,55 @@
+cxx = g++
+cc = gcc
+#ldflags = -flto=auto -O2
+ldflags = -Og -g
+cxxflags = $ldflags -Iinclude/ -DNDEBUG -DGLM_FORCE_XYZW_ONLY -Wall -Wextra
+ccflags = $cxxflags
+libs = -lglfw
+
+rule cxx
+  depfile = $out.d
+  deps = gcc
+  command = $cxx -MD -MF $out.d $cxxflags -o $out -c $in
+  description = CXX $in
+
+rule cc
+  depfile = $out.d
+  deps = gcc
+  command = $cc -MD -MF $out.d $ccflags -o $out -c $in
+  description = CC $in
+
+rule link
+  command = $cxx $ldflags -o $out $in $libs
+  description = LINK $out
+
+rule clean
+  command = rm -rf .build voxel
+
+build .build/Camera.o: cxx src/Camera.cpp
+build .build/CascadedShadowMap.o: cxx src/CascadedShadowMap.cpp
+build .build/Chunk.o: cxx src/Chunk.cpp
+build .build/ChunkManager.o: cxx src/ChunkManager.cpp
+build .build/Crosshair.o: cxx src/Crosshair.cpp
+build .build/Entity.o: cxx src/Entity.cpp
+build .build/Framebuffer.o: cxx src/Framebuffer.cpp
+build .build/InputManager.o: cxx src/InputManager.cpp
+build .build/Math.o: cxx src/Math.cpp
+build .build/Mesh.o: cxx src/Mesh.cpp
+build .build/NetworkManager.o: cxx src/NetworkManager.cpp
+build .build/Player.o: cxx src/Player.cpp
+build .build/RemotePlayers.o: cxx src/RemotePlayers.cpp
+build .build/Shader.o: cxx src/Shader.cpp
+build .build/Skybox.o: cxx src/Skybox.cpp
+build .build/Socket.o: cxx src/Socket.cpp
+build .build/TerrainGenerator.o: cxx src/TerrainGenerator.cpp
+build .build/Texture.o: cxx src/Texture.cpp
+build .build/WindowManager.o: cxx src/WindowManager.cpp
+build .build/main.o: cxx src/main.cpp
+build .build/glad.o: cc lib/glad.c
+
+build voxel: link .build/Camera.o .build/CascadedShadowMap.o .build/Chunk.o .build/ChunkManager.o .build/Crosshair.o .build/Entity.o .build/Framebuffer.o .build/InputManager.o .build/Math.o .build/Mesh.o .build/NetworkManager.o .build/Player.o .build/RemotePlayers.o .build/Shader.o .build/Skybox.o .build/Socket.o .build/TerrainGenerator.o .build/Texture.o .build/WindowManager.o .build/main.o .build/glad.o
+
+default voxel
+
+build clean: clean
+

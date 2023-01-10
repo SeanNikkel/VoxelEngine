@@ -2,3 +2,8 @@
 Debug
 Release
 Voxel.vcxproj.user
+
+/.build
+/.ninja_deps
+/.ninja_log
+/voxel

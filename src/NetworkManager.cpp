@@ -6,10 +6,12 @@
 
 NetworkManager::NetworkManager() : head_(Mesh::CreateCube(0.5f)), headTexture_("resources/player.png", false, true, GL_REPEAT, GL_NEAREST)
 {
+#if _WIN32
 	// Initialize WinSock
 	WSAData wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		assert(!"Error initializing WinSock!");
+#endif
 }
 
 void NetworkManager::Start(const char *ip)
@@ -93,7 +95,9 @@ NetworkManager::~NetworkManager()
 	// Destroy players' sockets before WinSock
 	players_.reset();
 
+#if _WIN32
 	// Cleanup WinSock
 	if (WSACleanup() != 0)
 		assert(!"Error shutting down WinSock!");
+#endif
 }

@@ -1,9 +1,15 @@
 #pragma once
 
+#if _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <WinSock2.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+typedef int SOCKET;
+#endif
 
 #include <vector>
 #include <optional>
